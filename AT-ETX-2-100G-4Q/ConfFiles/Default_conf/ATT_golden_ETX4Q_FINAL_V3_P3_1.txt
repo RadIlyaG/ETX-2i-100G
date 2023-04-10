@@ -1,0 +1,52 @@
+con sys announcement "************************************************************\n\r**  ETX-2I-100G-4QSFP\n\r**	user-default config for AT&T\n\r**********************************************TG 2-25-2022**\n\r"
+
+config port l2cp-profile l2cp-lldp
+    mac 0x0e peer
+exit all
+
+configure system lldp no shutdown
+
+configure port ethernet 3/1
+    l2cp profile l2cp-lldp 
+    lldp 
+        nearest-bridge-mode tx-rx 
+        nearest-bridge-basic-management port-description sys-name sys-description sys-capabilities management-address 
+        nearest-bridge-802.3 mac-phy-configuration max-frame-size 
+    exit all
+
+
+configure port svi 95 
+  no shutdown 
+exit all
+
+configure flows
+classifier-profile "v127" match-any 
+            match vlan 127 
+        exit
+classifier-profile "mng_all_v127" match-any 
+            match all
+        exit
+	 flow "mng_default_in" 
+            classifier "v127" 
+            no policer 
+            vlan-tag pop vlan 
+            ingress-port ethernet 3/1 
+            egress-port svi 95 
+            no shutdown 
+        exit
+        flow "mng_default_out" 
+            classifier "mng_all_v127" 
+            no policer 
+            vlan-tag push vlan 127 p-bit fixed 6 
+            ingress-port svi 95 
+            egress-port ethernet 3/1 queue 0 block 0/1 
+            no shutdown 
+        exit	
+
+exit
+router 1
+     interface 31    
+     dhcp     
+        bind svi 95
+     no shutdown  
+exit all

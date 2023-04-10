@@ -1,0 +1,9 @@
+Hardware malfunction
+Exception
+!!! PCIe 0 FAILURE !!!
+ERROR Read
+ERROR Read Write
+!!! FPGA load failed, rollback to default !!!
+ERROR MUX
+ERROR HWPORTG_PLL_control_write add = 
+ERROR Read

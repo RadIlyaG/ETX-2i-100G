@@ -1,0 +1,26 @@
+exit all
+configure 
+router 1
+no interface 32
+interface 1
+address 10.10.10.11/24
+bind svi 96
+no shutdown
+exit
+exit
+management
+snmp
+target-params 1
+message-processing-model snmpv3
+version usm
+security name initial level no-auth-no-priv
+no shutdown
+exit
+target mypc
+target-params 1
+address udp-domain 10.10.10.10
+no shutdown
+tag-list unmasked
+trap-sync-group 1
+exit all
+save

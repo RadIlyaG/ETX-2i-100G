@@ -1,0 +1,110 @@
+    configure
+        echo "Management configuration"
+#       Management configuration
+        management
+            echo "SNMP Configuration"
+#           SNMP Configuration
+            snmp
+                community "read"
+                    name "public"
+                    sec-name "v1_read"
+                    no shutdown
+                exit
+                community "trap"
+                    name "public"
+                    sec-name "v1_trap"
+                    no shutdown
+                exit
+                community "write"
+                    name "RAD#ETX"
+                    sec-name "v1_write"
+                    no shutdown
+                exit
+                target-params "tp1"
+                    message-processing-model snmpv1
+                    version snmpv1
+                    security name "v1_trap" level no-auth-no-priv
+                    no shutdown
+                exit
+                target "MyPC"
+                    target-params "tp1"
+                    address udp-domain 10.11.13.5
+                    no shutdown
+                    tag-list "unmasked"
+                exit
+            exit
+            access
+                ssh-encryption all
+                ssh-mac all
+            exit
+        exit
+        echo "Port Configuration"
+#       Port Configuration
+        port
+            echo "Service Virtual Interface- Port Configuration"
+#           Service Virtual Interface- Port Configuration
+            svi 1
+                no shutdown
+            exit
+            svi 96
+                no shutdown
+            exit
+        exit
+        echo "Flows Configuration"
+#       Flows Configuration
+        flows
+            echo "Classifier Profile Configuration"
+#           Classifier Profile Configuration
+
+            classifier-profile "UNCLASS" match-any
+                match all
+            exit
+            classifier-profile "4094" match-any
+                match vlan 4094
+            exit
+            echo "Flow Configuration"
+#           Flow Configuration
+            flow "mng_access_default_in"
+                classifier "mng_untagged"
+                no policer
+                ingress-port ethernet 0/101
+                egress-port svi 96
+                no shutdown
+            exit
+            flow "mng_access_default_out"
+                classifier "mng_all"
+                no policer
+                ingress-port svi 96
+                egress-port ethernet 0/101
+                no shutdown
+            exit
+            flow "MNG_IN"
+                classifier "4094"
+                no policer
+                vlan-tag pop vlan
+                ingress-port ethernet 3/1
+                egress-port svi 1 queue 0
+                no shutdown
+            exit
+            flow "MNG_OUT"
+                classifier "UNCLASS"
+                no policer
+                vlan-tag push vlan 4094 p-bit fixed 7
+                ingress-port svi 1
+                egress-port ethernet 3/1 queue 0 block 0/1
+                no shutdown
+            exit
+        exit
+        router 1
+            name "Router#1"
+            interface 1
+                bind svi 1
+                dhcp
+                dhcp-client
+                    client-id mac
+                exit
+                no shutdown
+            exit
+        exit
+    exit
+

@@ -1,0 +1,58 @@
+configure
+    system
+        lldp
+            no shutdown
+        exit
+    exit
+        port
+            ethernet 3/1
+                lldp
+                    nearest-bridge-mode tx-rx
+                    nearest-bridge-basic-management port-description sys-name sys-capabilities management-address
+                    nearest-bridge-802.3 mac-phy-configuration max-frame-size
+                exit
+            exit
+            svi 1
+                no shutdown
+            exit
+        exit
+        flows
+            classifier-profile "WAN_UNTAGGED" match-any
+                match untagged
+            exit
+            classifier-profile "WAN_ALL" match-any
+                match all
+            exit
+            flow "WAN_1_IN"
+                classifier "WAN_UNTAGGED"
+                no policer
+                ingress-port ethernet 3/1
+                egress-port svi 1
+                no shutdown
+            exit
+            flow "WAN_1_OUT"
+                classifier "WAN_ALL"
+                no policer
+                ingress-port svi 1
+                egress-port ethernet 3/1 queue 0 block 0/1
+                no shutdown
+            exit
+        exit
+        router 1
+            name "Router#1"
+            dhcp-client
+                dhcpv6-option-request
+            exit
+            interface 1
+                bind svi 1
+                dhcp-client
+                    client-id mac
+                exit
+                dhcpv6-client
+                ipv6-autoconfig
+                no shutdown
+            exit
+        exit
+    exit
+    configure
+    exit

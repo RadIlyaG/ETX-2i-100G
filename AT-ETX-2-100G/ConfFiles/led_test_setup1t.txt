@@ -1,0 +1,9 @@
+#always power LED GREEN
+# TEST LED Yellow; PSU1 and 2 LEDs green ;
+#100G ports LINK LEDs GREEN and 100G ports ACT leds Yellow
+
+memory address c2800000 write char value 13
+memory address c3800000 write char value 0A
+memory address c2400000 write char value AF
+memory address c3700000 write char value 3f
+

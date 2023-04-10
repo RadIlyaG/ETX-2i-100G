@@ -1,0 +1,147 @@
+
+    configure 
+
+        system 
+            name "WallGarden_TYPE-7" 
+        exit
+        
+		management 
+            login-user "autoconf" 
+                level su 
+                password "81502f28bb4ff78f2a727156c6b64bb8b98d5ab1" hash 
+                no shutdown 
+            exit
+
+            snmp 
+                community "read" 
+                    name "autoconfRO" 
+                    sec-name "v2_read" 
+                    no shutdown 
+                exit
+                community "write" 
+                    name "autoconfRW" 
+                    sec-name "v2_write" 
+                    no shutdown 
+                exit
+                target-params "tp1" 
+                    message-processing-model snmpv2c 
+                    version snmpv2c 
+                    security name "v2_trap" level no-auth-no-priv 
+                    no shutdown 
+                exit
+            exit
+        exit
+		
+        qos 
+            queue-group-profile "DefaultQueueGroup" 
+                queue-block 0/3 
+                exit
+                queue-block 0/4 
+                exit
+                queue-block 0/5 
+                exit
+                queue-block 0/6 
+                exit
+                queue-block 0/7 
+                exit
+
+            exit
+        exit
+
+        port 
+
+            svi 1 
+                no shutdown 
+            exit
+
+            ppp 1 
+                name "PPP_1" 
+                bind svi 1 
+                chap-hostname "rad-ent@start.bytel.dop" 
+                chap-password "3D9C16C04ADC8BBA" hash  
+                no refuse-no-auth 
+                no refuse-pap 
+            exit
+                ethernet 3/1 
+               name NNI_Access_Direct
+			   fec on 
+            no shut
+            exit
+                ethernet 3/2 
+               name NNI_Access_Direct
+			   fec on 
+            no shut
+            exit
+        exit
+
+        bridge 1 
+            name "BRIDGE 1" 
+
+            port 1 
+                no shutdown 
+            exit
+            port 2 
+                name "Access_Direct" 
+                no shutdown 
+            exit
+#       VLAN Configuration
+        vlan 10
+        exit
+        vlan 4086
+        exit
+
+        exit
+
+        flows 
+
+            classifier-profile "ALL" match-any 
+                match all 
+            exit
+            classifier-profile "vlan_mngt_acces_direct" match-any 
+                match vlan 4086 
+            exit
+            flow "SVI_OUT" 
+                classifier "ALL" 
+                policer profile "Policer1" 
+                vlan-tag push vlan 10 p-bit fixed 7 
+                ingress-port svi 1 
+                egress-port bridge-port 1 1 
+                reverse-direction 
+                no shutdown 
+            exit
+            flow "PPP_Acces-direct_IN" 
+                classifier "vlan_mngt_acces_direct" 
+                policer profile "Policer1" 
+                mark all 
+                    vlan 10 
+                exit
+                ingress-port ethernet 3/1 
+                egress-port bridge-port 1 2 
+                reverse-direction block 0/1 
+                no shutdown 
+            exit
+        exit
+        router 1 
+            name "Router#1" 
+			
+            interface 1 
+                name "WalledGarden_PPP" 
+                bind ppp 1 
+                dhcp-client 
+                    client-id mac 
+                exit
+                no shutdown 
+            exit
+        exit
+    exit
+
+
+    configure router 1 no interface 32
+	 
+	configure flows no flow "mng_access_default_out"
+	
+	configure flows no  flow "mng_access_default_in"
+	
+	configure port no svi 96
+	
+	save

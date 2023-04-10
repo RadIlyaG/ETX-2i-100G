@@ -1,0 +1,17 @@
+*****running-config copied to startup-config successfully*****
+*****5115 bytes copied in 2 secs (2557 bytes/sec)*****
+
+ETX-2I-100G-4QSFP#file copy r
+restore-point-config
+rollback-config
+running-config
+ETX-2I-100G-4QSFP# file copy running-config u
+user-default-config
+user-script
+ETX-2I-100G-4QSFP# file copy running-config user-default-config
+ Are you sure? [yes/no] _ y
+ETX-2I-100G-4QSFP#
+*****running-config copied to user-default-config successfully*****
+*****5115 bytes copied in 1 secs (5115 bytes/sec)*****
+
+ETX-2I-100G-4QSFP#

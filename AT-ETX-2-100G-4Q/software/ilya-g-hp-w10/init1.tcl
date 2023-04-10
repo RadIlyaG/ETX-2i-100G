@@ -1,0 +1,10 @@
+set gaGui(xy) +349+93
+set gaSet(entDUT) "ETX-2I-100G/ACF/4Q/16SFPP"
+set gaSet(DutInitName) "ETX-2I-100G.ACF.4Q.16SFPP.tcl"
+set gaSet(performShortTest) "0"
+set gaSet(eraseTitle) "0"
+set gaSet(ddrMultyQty) "5"
+set gaSet(scopeModel) ""
+set gaSet(quartusPrg) "C:/intelFPGA_pro/18.0/qprogrammer/bin64/quartus_pgm.exe"
+set gaSet(jicCdf) "C:/download/Quartus/2019.01.07/jic.cdf"
+set gaSet(pofCdf) "C:/download/Quartus/2019.01.07/m10.cdf"
