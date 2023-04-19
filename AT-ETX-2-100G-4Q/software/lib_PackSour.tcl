@@ -70,7 +70,8 @@ if 1 {
   }
   
   set ret [RLAutoSync::AutoSync "$s1 $d1 $s2 $d2" -noCheckFiles {init*.tcl skipped.txt *.db} \
-      -jarLocation $::RadAppsPath -javaLocation $gaSet(javaLocation) -emailL $emailL -putsCmd 1 -radNet $gaSet(radNet)]
+      -jarLocation $::RadAppsPath -javaLocation $gaSet(javaLocation) -emailL $emailL \
+      -putsCmd 1 -radNet $gaSet(radNet) -noCheckDirs {temp tmpFiles OLD old} ]
   #console show
   puts "ret:<$ret>"
   set gsm $gMessage
