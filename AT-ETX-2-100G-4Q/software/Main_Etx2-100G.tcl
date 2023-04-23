@@ -651,7 +651,7 @@ proc On_Off {run} {
     return -1
   } else {
     foreach {a b c} {$gaSet(entDUT)} {}
-    
+    puts "a:<$a> b:<$b> c:<$c>"; update
     if {[string is integer $a] && [string length $a]>0} {
       set offOnQty $a
     } else {
@@ -676,12 +676,12 @@ proc On_Off {run} {
     }
   }
   
-  if {[string is integer $gaSet(entDUT)] && [string length $gaSet(entDUT)]>0} {
-    set offOnQty $gaSet(entDUT)
-  } else {
-    set offOnQty 50
-    set gaSet(entDUT) $offOnQty
-  }
+  #if {[string is integer $gaSet(entDUT)] && [string length $gaSet(entDUT)]>0} {
+  #  set offOnQty $gaSet(entDUT)
+  #} else {
+  #  set offOnQty 50
+  #  set gaSet(entDUT) $offOnQty
+  #}
   set r [set p [set f 0]]
   for {set i 1} {$i<=$offOnQty} {incr i} {
     Status "OFF-ON $i from $offOnQty"
@@ -710,6 +710,9 @@ proc On_Off {run} {
     #set st [$gaSet(startTime) cget -text]
     set st "$gaSet(logTime) Run:$r, Pass:$p, Fail:$f"
     $gaSet(startTime) configure -text $st
+    if {$ret=="-1" && $sof=="yes} {
+      break
+    }
   }
   return $retRet
 }
