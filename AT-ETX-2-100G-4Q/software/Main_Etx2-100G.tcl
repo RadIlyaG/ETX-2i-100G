@@ -645,6 +645,37 @@ proc On_Off {run} {
   Status ""
   set retRet 0
   set offDur 30
+  
+  if ![llength $gaSet(entDUT)] {
+    set gaSet(fail) "The \'UUT's barcode\' should contain at least one parameter"
+    return -1
+  } else {
+    foreach {a b c} {$gaSet(entDUT)} {}
+    
+    if {[string is integer $a] && [string length $a]>0} {
+      set offOnQty $a
+    } else {
+      set gaSet(fail) "The first parameter (OFF-ON cycles quantity) should be an integer"
+      return -1
+    }
+    if {[string is integer $b] && [string length $b]>0} {
+      set offDur $b
+    } elseif {[string length $b]==0} {
+      set offDur 30
+    } else {
+      set gaSet(fail) "The second parameter (OFF duration) should be an integer"
+      return -1
+    }
+    if {[string length $c]==0} {
+      set sof no
+    } elseif {$c=="yes" || $c=="no"} {
+      set sof $c
+    } else {
+      set gaSet(fail) "The third parameter (StopOnFail) should be \'yes\' or \'no\' or nothing"
+      return -1
+    }
+  }
+  
   if {[string is integer $gaSet(entDUT)] && [string length $gaSet(entDUT)]>0} {
     set offOnQty $gaSet(entDUT)
   } else {

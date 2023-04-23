@@ -1432,6 +1432,8 @@ proc ToggleTestMode {} {
   BuildTests
   if {$gaSet(rbTestMode) eq "On_Off"} {
     DialogBox -title "Power OFF and ON" -type OK \
-      -message "Use the \'UUT's barcode\' entry to define the Power OFF-ON cycles quantity"
+      -message "Use the \'UUT's barcode\' entry to define\n\
+      the Power OFF-ON cycles quantity, OFF duration (default=30) and StopOnFail (default=no:\n\n\
+      For example: 100 25 yes"
   }
 }
