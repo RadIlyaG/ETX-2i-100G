@@ -660,7 +660,11 @@ proc Login {} {
     #set ret [Wait "Wait for ETX up" 20 white]
     #if {$ret!=0} {return $ret}  
   }
-  for {set i 1} {$i <= 64} {incr i} { 
+  
+  if ![info exists ::loginLoopsQty] {
+    set ::loginLoopsQty 64
+  }
+  for {set i 1} {$i <= $::loginLoopsQty} {incr i} { 
     if {$gaSet(act)==0} {return -2}
     Status "Login into ETX-2"
     puts "Login into ETX-2 i:$i"; update

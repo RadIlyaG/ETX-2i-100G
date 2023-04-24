@@ -650,7 +650,7 @@ proc On_Off {run} {
     set gaSet(fail) "The \'UUT's barcode\' should contain at least one parameter"
     return -1
   } else {
-    foreach {a b c} {$gaSet(entDUT)} {}
+    foreach {a b c} $gaSet(entDUT) {}
     puts "a:<$a> b:<$b> c:<$c>"; update
     if {[string is integer $a] && [string length $a]>0} {
       set offOnQty $a

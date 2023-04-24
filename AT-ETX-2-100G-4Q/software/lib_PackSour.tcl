@@ -188,6 +188,8 @@ if {![info exists gaSet(rbTestMode)]} {
   set gaSet(rbTestMode) "Full"
 }
 
+set ::loginLoopsQty 64
+
 GUI
 BuildTests
 update
