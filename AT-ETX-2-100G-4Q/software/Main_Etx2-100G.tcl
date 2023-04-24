@@ -683,6 +683,9 @@ proc On_Off {run} {
   #  set gaSet(entDUT) $offOnQty
   #}
   set r [set p [set f 0]]
+  
+  puts "offOnQty:<$offOnQty> offDur:<$offDur> sof:<$sof>"; update
+  
   for {set i 1} {$i<=$offOnQty} {incr i} {
     Status "OFF-ON $i from $offOnQty"
     set r $i
