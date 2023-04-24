@@ -710,7 +710,7 @@ proc On_Off {run} {
     #set st [$gaSet(startTime) cget -text]
     set st "$gaSet(logTime) Run:$r, Pass:$p, Fail:$f"
     $gaSet(startTime) configure -text $st
-    if {$ret=="-1" && $sof=="yes} {
+    if {$ret=="-1" && $sof=="yes"} {
       break
     }
   }
