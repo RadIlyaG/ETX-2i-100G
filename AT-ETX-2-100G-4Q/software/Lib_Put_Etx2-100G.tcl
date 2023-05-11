@@ -664,6 +664,11 @@ proc Login {} {
   if ![info exists ::loginLoopsQty] {
     set ::loginLoopsQty 64
   }
+  if ![info exists ::breakLoginOnError] {
+    set ::breakLoginOnError 1
+  }
+  set wasBootError 0
+  
   for {set i 1} {$i <= $::loginLoopsQty} {incr i} { 
     if {$gaSet(act)==0} {return -2}
     Status "Login into ETX-2"
@@ -676,7 +681,10 @@ proc Login {} {
     foreach ber $gaSet(bootErrorsL) {
       if [string match "*$ber*" $gaSet(loginBuffer)] {
         set gaSet(fail) "\'$ber\' occured during ETX's up"  
-        return -1
+        set wasBootError $gaSet(fail)
+        if $::breakLoginOnError {
+          return -1
+        }
       } else {
         ## 13:29 26/07/2022` puts "[MyTime] \'$ber\' was not found"
       } 
@@ -746,6 +754,10 @@ proc Login {} {
   }  
   if {$ret!=0} {
     set gaSet(fail) "Login to ETX-2 Fail"
+  }
+  if {$wasBootError != 0} {
+    set ret -1
+    set gaSet(fail) $wasBootError
   }
   puts "login lo:24 ret:<$ret>" ; update
   $gaSet(runTime) configure -text ""
@@ -2930,4 +2942,25 @@ proc 8SFPP_Login {} {
   Status $statusTxt
   return $ret
 }
-#
+
+# ***************************************************************************
+# AdminReset
+# ***************************************************************************
+proc AdminReset {} {
+  global gaSet buffer
+  Status "Admin Reset"
+  set com $gaSet(comDut)
+  set ret [Login]
+  if {$ret!=0} {return $ret}
+
+  set gaSet(fail) "Admin Reset fail"
+  Send $com "exit all\r" stam 0.25 
+  Status "Admin Reset"
+  set ret [Send $com "admin reboot\r" "yes/no" ]
+  if {$ret!=0} {return $ret}
+  set ret [Send $com "y\r" "System Boot" 30]
+  if {$ret!=0} {return $ret}
+ 
+  set ret [Login]
+  return $ret
+}

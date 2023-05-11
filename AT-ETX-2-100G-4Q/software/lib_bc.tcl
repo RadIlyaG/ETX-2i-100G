@@ -167,7 +167,7 @@ proc CheckBcOk {readTrace} {
 	global  gaDBox  gaSet
   puts "CheckBcOk $readTrace" ;  update
   if {$gaSet(rbTestMode) eq "On_Off"} {
-    set gaDBox(entVal1) "On_Off"
+    set gaDBox(entVal1) "On_Off_UUT-$gaSet(pair)"
     set gaDBox(entVal2) "On_OffU"
     return 0
   }

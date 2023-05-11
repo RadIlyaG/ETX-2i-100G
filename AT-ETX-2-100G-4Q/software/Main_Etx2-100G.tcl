@@ -683,6 +683,7 @@ proc On_Off {run} {
   #  set gaSet(entDUT) $offOnQty
   #}
   set r [set p [set f 0]]
+  set ::breakLoginOnError 0
   
   puts "offOnQty:<$offOnQty> offDur:<$offDur> sof:<$sof>"; update
   
@@ -707,6 +708,20 @@ proc On_Off {run} {
       set res FAIL_$gaSet(fail)
       set retRet -1
       incr f
+      AddToPairLog $gaSet(pair) "OFF-ON $i Result Power ON: $res"
+      
+      ## 07:14 11/05/2023
+      if {[string match {*occured during*} $gaSet(fail)]} {
+        AddToPairLog $gaSet(pair) "Admin Reset"
+        set ret [AdminReset]
+        if {$ret=="-1"} {
+          set resAR FAIL_$gaSet(fail)
+          set retRet -1          
+        } else {
+          set resAR $ret
+        }
+        AddToPairLog $gaSet(pair) "OFF-ON $i Result after Admin Reset: $resAR"
+      }
     }
     puts "OFF-ON $i from $offOnQty. Res: $res\n"; update
     AddToPairLog $gaSet(pair) "OFF-ON $i Result:$res"
@@ -717,5 +732,8 @@ proc On_Off {run} {
       break
     }
   }
+  
+  AddToPairLog $gaSet(pair) "-------------------"
+  AddToPairLog $gaSet(pair) "Run:$r, Pass:$p, Fail:$f"
   return $retRet
 }
