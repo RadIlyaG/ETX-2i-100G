@@ -1361,3 +1361,84 @@ proc AddDbrNameToNoTraceFile {} {
     puts $id $dbrName
   close $id
 }
+proc ianf {} {InformAboutNewFiles}
+# ***************************************************************************
+# InformAboutNewFiles
+# ***************************************************************************
+proc InformAboutNewFiles {} {
+  global gaSet
+  if {$gaSet(radNet)==0} {return {} }
+  set path [file dirname [pwd]]
+  set pathTail [file tail $path]
+  set secNow [clock seconds]
+  set ::newFilesL [list]
+  puts "\n[MyTime] InformAboutNewFiles"
+  CheckFolder4NewFiles $path $secNow
+  puts "::newFilesL:<$::newFilesL>"
+  
+  if {[llength $::newFilesL]>0} {
+    set msg "The following was changed during last hour:\n\n"
+    foreach fi $::newFilesL {
+      set ffi [format %-85s $fi]
+      append msg "$fi\t[clock format [file mtime $fi] -format '%Y.%m.%d-%H.%M.%S']\n"
+    }  
+    #append msg "\nwas sent"
+    append msg "\nAre you sure you want to upload it to TDS?"
+    set res [DialogBox -message $msg -type {Yes No} -justify left -icon question -title "Tester update" -aspect 2000]
+    #set res "Yes"
+    if {$res=="Yes"} {
+      if [string match *ilya-g-* [info host]] {
+        set mlist {ilya_g@rad.com}
+      } else {
+        set mlist {ilya_g@rad.com yehoshafat_r@rad.com ronen_be@rad.com } ; # 
+      }
+      set mess "The following was changed:\r\n"
+      foreach {s} $::newFilesL {
+        append mess "\r$s\n"
+      }
+      append mess "\rfile://R:\\IlyaG\\$pathTail\r"
+      SendMail $mlist $mess
+      if ![file exists R:/IlyaG/$pathTail] {
+        file mkdir R:/IlyaG/$pathTail
+      }
+      #set msg "A message regarding\n\n"
+      foreach fi $::newFilesL {
+        catch {file copy -force $fi R:/IlyaG/$pathTail } res
+        puts "file:<$fi>, res of copy:<$res>"
+      }
+      update
+    }
+  } else {
+    set msg "No new files"
+    DialogBox -message $msg -type Ok -icon info -title "Tester update" -aspect 2000
+    puts "msg:<$msg>"
+  }
+  
+}
+# ***************************************************************************
+# CheckFolder4NewFiles
+# ***************************************************************************
+proc CheckFolder4NewFiles {path secNow} {
+  #puts "CheckFolder4NewFiles $path $secNow"
+  foreach item [glob -nocomplain -directory $path *] {
+    if [file isdirectory $item] {
+      CheckFolder4NewFiles $item $secNow
+    } else {
+      set mtim  [file mtime $item]
+      if {[expr {$secNow - $mtim}] < 1800} {
+        ## if an file was modified during last half-hour, add it to list
+        #puts "cf4nf $item" ; update
+        if [string match {*init*.tcl} $item] {
+          ## don take this file
+        } else {
+          set dirname [file dirname $item]
+          if {[string match *ConfFiles* $dirname] ||\
+              [string match *uutInits* $dirname] ||\
+              [string match *TeamLeaderFiles* $dirname]} {
+            lappend ::newFilesL $item
+          }
+        }
+      }
+    }
+  }
+}

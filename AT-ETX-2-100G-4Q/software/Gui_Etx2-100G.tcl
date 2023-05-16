@@ -48,6 +48,8 @@ proc GUI {} {
          }
       }
       {separator}
+      {command "Inform about new files" {} "Exit" {} -command {InformAboutNewFiles}}
+      {separator}
       {command "E&xit" exit "Exit" {Alt x} -command {Quit}}
     }
     "&Tools" tools tools 0 {	  
