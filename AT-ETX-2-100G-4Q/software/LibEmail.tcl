@@ -170,3 +170,18 @@ proc TestEmail {} {
   puts "Email Test pass ... !" ; update
   return Ok
 }
+
+# ***************************************************************************
+# SendMail
+# ***************************************************************************
+proc SendMail {emailL mess} {
+  
+  if {[llength $emailL]>0} {
+    ezsmtp::config -mailhost radmail.rad.co.il -from "[string toupper [info host] ]"
+    catch {ezsmtp::send -to "[lindex $emailL 0]" -cclist [lrange $emailL 1 end] -subject "[string toupper [info host] ] : init/s changed" \
+      -body "\n[string toupper [info host] ] : Message from Tester\n\
+       \n$mess " \
+      -from "$::env(USERNAME)@rad.com"} res
+    puts "res:<$res>"  
+  }    
+}
