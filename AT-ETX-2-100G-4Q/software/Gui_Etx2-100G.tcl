@@ -326,7 +326,7 @@ proc ButRun {} {
   
   set gaSet(act) 1
   console eval {.console delete 1.0 end}
-  console eval {set ::tk::console::maxLines 100000}
+  console eval {set ::tk::console::maxLines 500000}
   LoadBootErrorsFile
   LoadNoTraceFile
   
