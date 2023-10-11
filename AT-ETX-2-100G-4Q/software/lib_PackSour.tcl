@@ -63,7 +63,7 @@ if 1 {
     if {[string match *david-ya* [info host]] || [string match *ilya_g* [info host]]} {
       set emailL [list]
     } else {
-      set emailL {{yehoshafat_r@rad.com ronen_be@rad.com} {} {}}
+      set emailL {{yehoshafat_r@rad.com} {} {}}
     }
   } else {
     set emailL [list]
