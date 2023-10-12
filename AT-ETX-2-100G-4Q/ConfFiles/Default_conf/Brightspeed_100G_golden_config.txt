@@ -1,0 +1,66 @@
+# configuration file
+exit all
+    configure 
+#       Management configuration
+        management 
+#           SNMP Configuration
+            snmp 
+                community "RO_1" 
+                    name "public" 
+                    sec-name "v2_read" 
+                    no shutdown 
+                exit
+            exit
+        exit
+#       Port Configuration
+        port 
+            ethernet 3/1 
+                egress-mtu 9100 
+            exit
+#           Service Virtual Interface- Port Configuration
+            svi 1 
+                no shutdown 
+            exit
+        exit
+#       Flows Configuration
+        flows 
+            rate-sampling-window 1 
+#           Classifier Profile Configuration
+            classifier-profile "in-band-mng" match-any 
+                match vlan 127 
+            exit
+            classifier-profile "all" match-any 
+                match all 
+            exit
+#           Flow Configuration
+            flow "inband-down" 
+                classifier "in-band-mng" 
+                policer profile "Policer1" 
+                vlan-tag pop vlan 
+                ingress-port ethernet 3/1 
+                egress-port svi 1 queue 1 
+                no shutdown 
+            exit
+            flow "inband-up" 
+                classifier "all" 
+                policer profile "Policer1" 
+                vlan-tag push vlan 127 p-bit fixed 7 
+                ingress-port svi 1 
+                egress-port ethernet 3/1 queue 0 block 0/1 
+                no shutdown 
+            exit
+        exit
+        router 1 
+            name "Router#1" 
+            interface 1 
+                bind svi 1 
+                dhcp 
+                dhcp-client 
+                    client-id mac 
+                exit
+                no shutdown 
+            exit
+        exit
+    exit
+    configure 
+    exit
