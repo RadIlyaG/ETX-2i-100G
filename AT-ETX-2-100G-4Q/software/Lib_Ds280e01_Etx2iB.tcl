@@ -102,32 +102,41 @@ proc GetPageFile {barcode trac} {
   #Page0
   set ret [regexp {Page 0 - ([\w ]+)} $res var gaGet(page0)]  
   if {$ret!=1} {
-  	set gaSet(fail) "Page0 retrieval fail." ; update
-    puts stderr "Page0 retrieval fail." 
+  	set res [regsub -all \[\-\!\r\n\]+ $res ""]
+    set txt "Get Page0 fail - $res"
+  	set gaSet(fail) $txt ; update
+    puts stderr $txt 
     return -1
   }
   set gaGet(page0) [string trim $gaGet(page0)]
   #Page1
   set ret [regexp {Page 1 - ([\w ]+)} $res var gaGet(page1)]  
   if {$ret!=1} {
-  	set gaSet(fail) "Page1 retrieval fail." ; update
-    puts stderr "Page1 retrieval fail." 
+  	set res [regsub -all \[\-\!\r\n\]+ $res ""]
+    set txt "Get Page1 fail - $res"
+  	set gaSet(fail) $txt ; update
+    puts stderr $txt
+    return -1
     return -1
   }
   set gaGet(page1) [string trim $gaGet(page1)]  
   #Page2
   set ret [regexp {Page 2 - ([\w ]+)} $res var gaGet(page2)]  
   if {$ret!=1} {
-  	set gaSet(fail) "Page2 retrieval fail." ; update
-    puts stderr "Page2 retrieval fail." 
+  	set res [regsub -all \[\-\!\r\n\]+ $res ""]
+    set txt "Get Page2 fail - $res"
+  	set gaSet(fail) $txt ; update
+    puts stderr $txt
     return -1
   }
   set gaGet(page2) [string trim $gaGet(page2)]  
   #Page3
   set ret [regexp {Page 3 - ([\w ]+)} $res var gaGet(page3)]  
   if {$ret!=1} {
-  	set gaSet(fail) "Page3 retrieval fail." ; update
-    puts stderr "Page3 retrieval fail." 
+  	set res [regsub -all \[\-\!\r\n\]+ $res ""]
+    set txt "Get Page3 fail - $res"
+  	set gaSet(fail) $txt ; update
+    puts stderr $txt
     return -1
   }  
   set gaGet(page3) [string trim $gaGet(page3)]
