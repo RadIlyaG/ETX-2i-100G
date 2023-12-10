@@ -93,11 +93,6 @@ proc GUI {} {
       }
       }
       {separator}   
-      {command "Init ETX220" {} "" {} -command {_ToolsEtxGen}} 
-      {separator}  
-      {command "Init AUX1" {} "" {} -command {InitAux Aux1}} 
-      {command "Init AUX2" {} "" {} -command {InitAux Aux2}} 
-      {separator}  
       {cascad "Email" {} fs 0 {
         {command "E-mail Setting" gaGui(ToolAdd) {} {} -command {GuiEmail .mail}} 
   		  {command "E-mail Test" gaGui(ToolAdd) {} {} -command {TestEmail}}       
@@ -133,6 +128,11 @@ proc GUI {} {
     {separator}    
       {radiobutton "Read Mac in UploadAppl" {} {} {} -command {} -variable gaSet(readMacUploadAppl) -value 1}
       {radiobutton "Don't read Mac in UploadAppl" {} {} {} -command {} -variable gaSet(readMacUploadAppl) -value 0}
+      {command "Init ETX220" {} "" {} -command {_ToolsEtxGen}} 
+      {separator}  
+      {command "Init AUX1" {} "" {} -command {InitAux Aux1}} 
+      {command "Init AUX2" {} "" {} -command {InitAux Aux2}} 
+      {separator}  
   }
    #{command "SW init" init {} {} -command {GuiSwInit}}	
 #    {radiobutton "Stop on Failure" {} "" {} -value 1 -variable gaSet(stopFail)}
