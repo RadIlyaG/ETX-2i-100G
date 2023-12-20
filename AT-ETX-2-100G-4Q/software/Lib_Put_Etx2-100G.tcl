@@ -179,12 +179,43 @@ proc PS_IDTest {} {
   puts "sw:$sw gaSet(dbrSW):$gaSet(dbrSW)"
   
   
+  
+  set gaSet(fail) "Logon fail"
+  set ret [Send $com "exit all\r" ETX-2]
+  if {$ret!=0} {return $ret}
+  set ret [LogonDebug $com]
+  if {$ret!=0} {return $ret}
+  set ret [Send $com "debug mea\r\r\r" FPGA 11]
+  if {$ret!=0} {return $ret}
+  set ret [Send $com "mea util fctl\r" fctl 2]
+  if [string match *ENTU_ERROR* $buffer] {
+    set ret [Send $com "mea util fan\r" fan 2]
+  }
+  if {$ret!=0} {
+    set ret [Send $com "\r\r" stam 1]
+  }
+  set ret [Send $com "st\r" stam 1]
+  #set tacho [lindex [split $buffer] 3]
+  set l [split $buffer]
+  puts "l:<$l>"
+  set tacho [lindex [lreplace $l  [lsearch $l st] [lsearch $l st]] 3]
+  puts "tacho:<$tacho>"
+  AddToPairLog $gaSet(pair) "Tacho: $tacho"
+  if {$tacho=="FFFF"} {
+    set gaSet(fail) "The TACHO is $tacho"  
+    return -1
+  }
+    
+  set ret [Send $com "exit\r\r" ETX-2 2]
+  if {$ret!=0} {
+    Send $com "exit\r\r" ETX-2 2
+  }
+  
   if {$sw!=$gaSet(dbrSW)} {
     set gaSet(fail) "SW is \"$sw\". Should be \"$gaSet(dbrSW)\""
     return -1
   }
   
-    
 #   set ret [ReadCPLD]
 #   if {$ret!=0} {return $ret}
   
@@ -1932,7 +1963,7 @@ proc LedsTest_perf {} {
   set com $gaSet(comDut)
   set ret [LogonDebug $com]
 
- set gaSet(fail) "LEDs Test configuration fail"
+  set gaSet(fail) "LEDs Test configuration fail"
   set ret [Send $com "debug mea\r\r\r" FPGA 11]
   if {$ret!=0} {return $ret}
   
@@ -2118,7 +2149,7 @@ proc LogonDebug {com} {
 #     if {$ret!=0} {return $ret}
     regexp {Key code:\s+(\d+)\s} $buffer - kc
     catch {exec $::RadAppsPath/atedecryptor.exe $kc pass} password
-    set ret [Send $com "$password\r" ETX-2I 1]
+    set ret [Send $com "$password\r" ETX-2 1]
     if {$ret!=0} {return $ret}
   } else {
     set ret 0
