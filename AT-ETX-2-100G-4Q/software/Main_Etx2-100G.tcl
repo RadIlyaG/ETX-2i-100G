@@ -650,8 +650,8 @@ proc On_Off {run} {
     set gaSet(fail) "The \'UUT's barcode\' should contain at least one parameter"
     return -1
   } else {
-    foreach {a b c} $gaSet(entDUT) {}
-    puts "a:<$a> b:<$b> c:<$c>"; update
+    foreach {a b c d} $gaSet(entDUT) {}
+    puts "a:<$a> b:<$b> c:<$c> d:<$d>"; update
     if {[string is integer $a] && [string length $a]>0} {
       set offOnQty $a
     } else {
@@ -672,6 +672,14 @@ proc On_Off {run} {
       set sof $c
     } else {
       set gaSet(fail) "The third parameter (StopOnFail) should be \'yes\' or \'no\' or nothing"
+      return -1
+    }
+    if {[string length $d]==0} {
+      set onDur random
+    } elseif {[string is integer $d]} {
+      set onDur $d
+    } else {
+      set gaSet(fail) "The fourth parameter (ON duration) should be \'random\' or an integer or nothing"
       return -1
     }
   }
@@ -724,9 +732,13 @@ proc On_Off {run} {
       }
     }
     puts "OFF-ON $i from $offOnQty. Res: $res\n"; update
-    set randMinutes [expr {int(10*rand())}]; set randSeconds [expr {60*$randMinutes}]
-    if {$randMinutes==0} {set randMinutes 1}
-    set randSeconds [expr {60*$randMinutes}]
+    if {$onDur=="random"} {
+      set randMinutes [expr {int(10*rand())}]; set randSeconds [expr {60*$randMinutes}]
+      if {$randMinutes==0} {set randMinutes 1}
+      set randSeconds [expr {60*$randMinutes}]
+    } else {
+      set randSeconds $onDur
+    }
     set ret [Wait "$randSeconds sec in ON state" $randSeconds white]
     AddToPairLog $gaSet(pair) "$randSeconds sec in ON state"
     AddToPairLog $gaSet(pair) "OFF-ON $i Result:$res"
