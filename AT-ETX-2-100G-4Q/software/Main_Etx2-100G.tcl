@@ -724,6 +724,11 @@ proc On_Off {run} {
       }
     }
     puts "OFF-ON $i from $offOnQty. Res: $res\n"; update
+    set randMinutes [expr {int(10*rand())}]; set randSeconds [expr {60*$randMinutes}]
+    if {$randMinutes==0} {set randMinutes 1}
+    set randSeconds [expr {60*$randMinutes}]
+    set ret [Wait "$randSeconds sec in ON state" $randSeconds white]
+    AddToPairLog $gaSet(pair) "$randSeconds sec in ON state"
     AddToPairLog $gaSet(pair) "OFF-ON $i Result:$res"
     #set st [$gaSet(startTime) cget -text]
     set st "$gaSet(logTime) Run:$r, Pass:$p, Fail:$f"
