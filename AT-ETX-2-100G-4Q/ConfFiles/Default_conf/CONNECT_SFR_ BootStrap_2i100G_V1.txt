@@ -1,0 +1,197 @@
+configure
+    echo "System Configuration"
+#   System Configuration
+    system 
+        name "BOOTSTRAP-2I100G"
+        date-and-time 
+          date-format dd-mm-yyyy 
+            exit
+            echo "DHCP Relay Configuration"
+#  DHCP Relay Configuration
+         dhcp-relay 
+           dhcp-option-82 service "STIT" circuit-id hostname-svlan-cvlan-card-port-ascii remote-id chassis-mac-ascii short-format  
+            exit
+        exit
+	    echo "Management configuration"
+#   Management configuration
+    management 
+        echo "SNMP Configuration"
+#       SNMP Configuration
+        snmp 
+         user "blackhole_user" sha-auth aes128 
+          authentication key "JJD%ngIplQx2856.M" 
+          privacy key "JJD%ngIplQx2856.M" 
+        no shutdown 
+    exit
+        access-group "lecture-v3" usm auth-priv 
+        context-match exact
+        read-view "internet" 
+        write-view "internet" 
+        notify-view "" 
+        no shutdown 
+    exit
+        security-to-group usm sec-name "blackhole_user" 
+        group-name "lecture-v3" 
+        no shutdown 
+            exit
+            view "internet" 1.3.6 
+                mask 1.1.1 
+                no shutdown 
+            exit
+            view "internet" 1.3.111 
+                mask 1.1.1 
+                no shutdown 
+            exit
+            view "internet" 1.2.840.10006.300.43 
+                mask 1.1.1.1.1.1 
+                no shutdown 
+            exit
+            view "internet" 1.3.6.1.6.3.1.1.6 
+                mask 1.1.1.1.1.1.1.1.1 
+                no shutdown 
+            exit
+            view "internet" snmpFrameworkMIB.2.1 
+                mask 1.1.1.1.1.1.1.1.1 
+                no shutdown 
+            exit           
+        exit
+    exit
+    echo "Port Configuration"
+#   Port Configuration
+    port 
+        echo "Ethernet - Port Configuration"
+#       Ethernet - Port Configuration
+        ethernet 3/1 
+           name "***WAN BlackHole ***"
+         exit
+        ethernet 3/2 
+           egress-mtu 9216 
+        exit
+        ethernet 3/3 
+            egress-mtu 9216 
+        exit
+        ethernet 3/4 
+            egress-mtu 9216 
+        exit
+        ethernet 2/1 
+             egress-mtu 9216  
+        exit
+        ethernet 2/2 
+            egress-mtu 9216
+        exit
+        ethernet 2/3 
+            egress-mtu 9216 
+        exit
+        ethernet 2/4 
+            egress-mtu 9216 
+        exit
+        ethernet 2/5 
+            egress-mtu 9216 
+        exit
+        ethernet 2/6 
+            egress-mtu 9216  
+        exit
+        ethernet 2/7 
+            egress-mtu 9216 
+        exit
+        ethernet 2/8 
+            egress-mtu 9216 
+		exit
+        ethernet 1/1 
+             egress-mtu 9216  
+        exit
+        ethernet 1/2 
+            egress-mtu 9216
+        exit
+        ethernet 1/3 
+            egress-mtu 9216 
+        exit
+        ethernet 1/4 
+            egress-mtu 9216 
+        exit
+        ethernet 1/5 
+            egress-mtu 9216 
+        exit
+        ethernet 1/6 
+            name "STIT" 
+        exit
+        ethernet 1/7 
+            egress-mtu 9216 
+        exit
+        ethernet 1/8 
+            egress-mtu 9216 
+		exit
+         echo "Service Virtual Interface- Port Configuration"
+#      Service Virtual Interface- Port Configuration		
+        svi 1 
+            no shutdown 
+        exit
+    exit
+  echo "Flows Configuration"
+#   Flows Configuration
+    flows 
+        echo "Classifier Profile Configuration"
+#       Classifier Profile Configuration
+        classifier-profile "STIT_up" match-any 
+            match untagged 
+        exit
+        classifier-profile "STIT_dw" match-any 
+            match vlan 4090 
+        exit
+        classifier-profile "CPEL2_up" match-any 
+            match untagged 
+        exit
+        classifier-profile "CPEL2_dw" match-any 
+            match vlan 4091    
+        exit
+        echo "Flow Configuration"
+#       Flow Configuration
+        flow "STIT_dw" 
+            classifier "STIT_dw" 
+            no policer 
+            vlan-tag pop vlan 
+            ingress-port ethernet 3/1 
+            egress-port ethernet 1/6 queue 5 block 0/1
+            service-name "STIT"
+            no shutdown 
+        exit
+        flow "STIT_up" 
+            classifier "STIT_up" 
+            no policer 
+            vlan-tag push vlan 4090 p-bit fixed 4 
+            ingress-port ethernet 1/6 
+            egress-port ethernet 3/1 queue 0 block 0/1 
+            service-name "STIT" 
+            no shutdown 
+        exit
+        flow "CPEL2_up" 
+            classifier "CPEL2_up" 
+            no policer 
+            vlan-tag push vlan 4091 p-bit fixed 4 
+            ingress-port svi 1 
+            egress-port ethernet 3/1 queue 0 block 0/1 
+            no shutdown 
+        exit
+        flow "CPEL2_dw" 
+            classifier "CPEL2_dw" 
+            no policer 
+            vlan-tag pop vlan 
+            ingress-port ethernet 3/1 
+            egress-port svi 1 queue-map-profile "CosProfile1" 
+            no shutdown 
+        exit      
+    exit
+    router 1 
+        name "Router#1" 
+        interface 1 
+            bind svi 1 
+            dhcp 
+            dhcp-client 
+                client-id mac 
+                exit
+            no shutdown 
+        exit
+    exit
+ exit
+
+
