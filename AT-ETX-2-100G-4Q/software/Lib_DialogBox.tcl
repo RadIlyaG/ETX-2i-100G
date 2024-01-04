@@ -79,7 +79,7 @@ proc DialogBox {args} {
                      ent1focus 0 place center font TkDefaultFont DotEn 0 DashEn 0\
                      RadButQty 0 RadButPerRow 1 RadButLab "" RadButVar "" RadButVal "" RadButInvoke ""\
                      RadButCmd "" entInFocus ""\
-                     bg SystemButtonFace fg SystemWindowText} {
+                     bg SystemButtonFace fg SystemWindowText NoNumEn 0} {
     set var$opt [Opt $args "-$opt" $def]
   }
   
@@ -115,7 +115,7 @@ proc DialogBox {args} {
   #create Buttons
   foreach but $vartype {
     if {[lsearch $vartype $but]==$varaccpButIndx} {
-      $dlg add -text $but -name $but -command [list EndDlg $dlg $but $varentQty $varDotEn $varDashEn]
+      $dlg add -text $but -name $but -command [list EndDlg $dlg $but $varentQty $varDotEn $varDashEn $varNoNumEn]
     } else {
       $dlg add -text $but -name $but -command [list Dialog::enddialog $dlg $but]
     }    
@@ -151,15 +151,15 @@ proc DialogBox {args} {
           if {$varwidth!=""} {
             [set ent$fi] configure -width $varwidth
           }
-          pack [set ent$fi] -padx 2 -side right -fill x -expand 1
+          pack [set ent$fi] -padx 2 -side right ; #-fill x -expand 1
           
           ## don't pack empty Label
           if {$labText!=""} {            
-            pack [set lab$fi] -padx 2 -side right
+            pack [set lab$fi] -padx 2 -side left; #right
           }
           
         #pack $f -padx 2 -pady 2  -anchor e -fill x -expand 1
-        grid $f -padx 2 -pady 2 -row [expr {($fi-1) / $varentPerRow}] -column [expr {($fi-1) % $varentPerRow}]
+        grid $f -padx 2 -pady 2 -sticky we -row [expr {($fi-1) / $varentPerRow}] -column [expr {($fi-1) % $varentPerRow}]
         
         
         ## in case of 2 Entries pack them side-by-side
@@ -189,10 +189,10 @@ proc DialogBox {args} {
     
     ## binding for each Entries, except last
     for {set fi 1} {$fi<$varentQty} {incr fi} {
-      bind [set ent$fi] <Return> [list ReturnOnEntry [set ent$fi] $fi [list focus -force [set ent[expr {$fi+1}]] ] $varDotEn $varDashEn ]
+      bind [set ent$fi] <Return> [list ReturnOnEntry [set ent$fi] $fi [list focus -force [set ent[expr {$fi+1}]] ] $varDotEn $varDashEn $varNoNumEn]
     }
     ## binding for the last Entry
-    bind [set ent$varentQty] <Return> [list ReturnOnEntry [set ent$varentQty] $fi [list $dlg invoke $varaccpButIndx ] $varDotEn $varDashEn ]
+    bind [set ent$varentQty] <Return> [list ReturnOnEntry [set ent$varentQty] $fi [list $dlg invoke $varaccpButIndx ] $varDotEn $varDashEn $varNoNumEn]
   }
   if {$varRadButQty>0} {
     set fr [frame [$dlg getframe].frRB -bd 2 -relief groove]
@@ -252,12 +252,12 @@ proc Opt {lOpt opt def} {
 # ***************************************************************************
 # EndDlg
 # ***************************************************************************
-proc EndDlg {dlg but varentQty dotEn dashEn} {
+proc EndDlg {dlg but varentQty dotEn dashEn noNumEn} {
   #puts "EndDlg $dlg $but $varentQty $dotEn $dashEn"
   global gaDBox
   set res 1
   for {set fi 1} {$fi<=$varentQty} {incr fi} {
-    set res [ReturnOnEntry [$dlg getframe].fr.f$fi.ent$fi $fi [list return 1]  $dotEn $dashEn]
+    set res [ReturnOnEntry [$dlg getframe].fr.f$fi.ent$fi $fi [list return 1]  $dotEn $dashEn $noNumEn]
     #puts "fi:$fi res:$res"
     if {$res!="1"} {return}
   }    
@@ -266,24 +266,19 @@ proc EndDlg {dlg but varentQty dotEn dashEn} {
 # ***************************************************************************
 # ReturnOnEntry
 # ***************************************************************************
-proc ReturnOnEntry {e fi cmd dotEn dashEn} {
-  #puts "ReturnOnEntry $e $fi $cmd $dotEn $dashEn"
+proc ReturnOnEntry {e fi cmd dotEn dashEn noNumEn} {
   set eState [$e cget -state]
-  #puts "ReturnOnEntry $e state: $eState"
   global gaDBox
-  
   set P [$e get]
   if {$eState=="normal"} {  
-    set res [EntryValidCmd $P $dotEn $dashEn]
+    set res [EntryValidCmd $P $dotEn $dashEn $noNumEn]
   } else {
     set res 1
   }
   #puts "e:$e P:$P res:$res cmd:$cmd fi:$fi" ; update
   if {$res==1} {
     set gaDBox(entVal$fi) $P
-    
-      eval $cmd
-    
+    eval $cmd
   } else {
     $e selection range 0 end 
   }
@@ -292,7 +287,7 @@ proc ReturnOnEntry {e fi cmd dotEn dashEn} {
 # EntryValidCmd
 # this proc must return 1 or 0
 # ***************************************************************************
-proc EntryValidCmd {P dotEn dashEn} {
+proc EntryValidCmd {P dotEn dashEn noNumEn} {
   #puts "EntryValidCmd $P $dotEn $dashEn"
   set leng [string length $P]
 	set rep [regexp -all { } $P]
@@ -316,8 +311,11 @@ proc EntryValidCmd {P dotEn dashEn} {
       set dash "BAD"
     }
   }
-  set num [string is alnum [regsub -all {[\s]} $P ""]]
-  
+  if {$noNumEn=="1"} {
+    set num 1
+  } else {
+    set num [string is alnum [regsub -all {[\s]} $P ""]]
+  }
   set txt "EntryValidCmd leng:<$leng> rep:<$rep> num:<$num> $dot $dash"
 	if {($leng>0) && ($leng!=$rep) && ($num=="1") && ($dot=="OK") && ($dash=="OK")} {
     puts "$txt return:1"

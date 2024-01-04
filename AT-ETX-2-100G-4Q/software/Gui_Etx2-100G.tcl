@@ -1437,8 +1437,7 @@ proc ToggleTestMode {} {
   BuildTests
   if {$gaSet(rbTestMode) eq "On_Off"} {
     DialogBox -title "Power OFF and ON" -type OK  -bg yellow -font {TkDefaultFont 11}\
-      -message "Use the \'UUT's barcode\' entry to define\n\n\
-      the Power OFF-ON cycles quantity, the OFF duration (default=30), the StopOnFail (default=no) and the ON duration (default=random)\n\n\
-      For example: 100 25 yes random"
+      -message "Use the \'UUT's barcode\' entry to define the following:\n\n* Power OFF-ON cycles quantity\n* OFF duration in seconds (default=30)\n* StopOnFail (default=no)\n* ON duration in seconds (default=random)\n\n\
+      For example: 100 25 yes random"  -justify left
   }
 }
