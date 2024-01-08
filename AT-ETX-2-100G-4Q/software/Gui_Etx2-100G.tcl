@@ -319,6 +319,8 @@ proc ButRun {} {
   set gaSet(runStatus) ""
   focus $gaGui(tbrun) 
   set gaSet(1.barcode1.IdMacLink) ""
+  set gaSet(msval1) ""
+  set gaSet(msval2) ""
   set ::wastedSecs 0
   set gaSet(ButRunTime) [clock seconds]
   
@@ -549,6 +551,14 @@ proc ButRun {} {
   $gaGui(tbrun) configure -relief raised -state normal
   $gaGui(tbstop) configure -relief sunken -state disabled
   $gaGui(tbpaus) configure -relief sunken -state disabled
+  
+  if {$gaSet(msval1)!="" && $gaSet(msval1)=="2048"} {
+    RLSound::Play information
+    set txt "Put sticker \'Extended Memory\'"
+    set res [DialogBox -type "OK" -icon /images/info -title "Extended Memory" \
+          -message $txt -bg yellow -font {TkDefaultFont 11}]
+    update
+  }
   
   if {$gaSet(eraseTitle)==1} {
     wm title . "$gaSet(pair) : "

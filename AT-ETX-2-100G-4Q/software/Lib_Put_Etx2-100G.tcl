@@ -164,8 +164,18 @@ proc PS_IDTest {} {
   puts "fanSt:$fanSt"
   if {$b=="19"} { 
     if {$fanSt!="1 OK 2 OK 3 OK 4 OK"} {
-      set gaSet(fail) "FAN Status is \'$fanSt\'"
-      return -1
+      set ret [Send $com "show environment\r" chassis]
+      if {$ret!=0} {return $ret}
+      regexp {FAN Status[\s-]+(.+)\sSensor } $buffer ma fanSt
+      if ![info exists fanSt] {
+        set gaSet(fail) "Can't read FAN Status"
+        return -1
+      }
+      puts "fanSt:$fanSt"
+      if {$fanSt!="1 OK 2 OK 3 OK 4 OK"} {
+        set gaSet(fail) "FAN Status is \'$fanSt\'"
+        return -1
+      }
     }
   }
   
@@ -211,6 +221,30 @@ proc PS_IDTest {} {
     Send $com "exit\r\r" ETX-2 2
   }
   
+  set ret [Send $com "debug shell\r\r\r" "->" 3]
+  if {$ret!=0} {
+    set gaSet(fail) "The TACHO is $tacho"  
+    return -1
+  }
+  set ret [Send $com "HWPORT_memSize\r" "00"]
+  if {$ret!=0} {
+    set gaSet(fail) "Read HWPORT_memSize fail"  
+    return -1
+  }
+  set gaSet(msval1) ""
+  set res [regexp {value[\s\=]+(\d+)[\s\=]+(0x\d00)} $buffer ma msval1 msval2]
+  if {$res==0} {
+    set gaSet(fail) "Retrive HWPORT_memSize fail"  
+    return -1
+  }
+  puts "HWPORT_memSize: $msval1 $msval2"
+  AddToPairLog $gaSet(pair) "HWPORT_memSize: $msval1 $msval2"
+  set gaSet(msval1) $msval1
+  set ret [Send $com "exit\r\r" ETX-2 2]
+  if {$ret!=0} {
+    Send $com "exit\r\r" ETX-2 2
+  }
+  
   if {$sw!=$gaSet(dbrSW)} {
     set gaSet(fail) "SW is \"$sw\". Should be \"$gaSet(dbrSW)\""
     return -1
@@ -220,7 +254,7 @@ proc PS_IDTest {} {
 #   if {$ret!=0} {return $ret}
   
   if {![info exists gaSet(uutBootVers)] || $gaSet(uutBootVers)==""} {
-    set ret [Send $com "exit all\r" 2I]
+    set ret [Send $com "exit all\r" "-2"]
     if {$ret!=0} {return $ret}
     set ret [Send $com "admin reboot\r" "yes/no"]
     if {$ret!=0} {return $ret}
@@ -245,13 +279,22 @@ proc PS_IDTest {} {
   }
   puts "dbrBVer:<$dbrBVer>"
   update
+  set ret 0
   if {$gaSet(uutBootVers)!=$dbrBVer} {
     set gaSet(fail) "Boot Version is \"$gaSet(uutBootVers)\". Should be \"$dbrBVer\""
     return -1
   }
-  set gaSet(uutBootVers) ""
   
+  if {$msval1==512 && $gaSet(uutBootVers)!="1.20"} {
+    set gaSet(fail) "Boot Version is \"$gaSet(uutBootVers)\".  For memSize=512 it should be 1.20"
+    return -1
+  }
+  if {$msval1==2048 && $gaSet(uutBootVers)<"1.21"} {
+    set gaSet(fail) "Boot Version is \"$gaSet(uutBootVers)\".  For memSize=2048 it should be 1.21 or higher"
+    return -1
+  }
 
+  set gaSet(uutBootVers) ""
   return $ret
 }
  
@@ -600,6 +643,13 @@ proc Login {} {
   append gaSet(loginBuffer) "$buffer"
   Send $gaSet(comDut) "\r" stam 0.25
   append gaSet(loginBuffer) "$buffer"
+  
+  if {[string match {*->*} $buffer]==1} {
+    Send $gaSet(comDut) exit\r\r stam 1
+    Send $gaSet(comDut) exit\r\r stam 1
+    append gaSet(loginBuffer) "$buffer"
+  }
+  
   if {[string match {*user>*} $buffer]==0} {
     set ret -1  
   } else {
@@ -2492,56 +2542,70 @@ proc VoltageTestPerf {} {
   set mPtxt "MAIN (U68)"
   set min 3.135
   set max 3.465
+  set imin 1.06
+  set imax 4.06
   set shift 1
-  set ret [VerifyVoltageMP $mP $mPtxt $shift $min $max]
+  set ret [VerifyVoltageMP $mP $mPtxt $shift $min $max $imin $imax]
   if {$ret!=0} {return $ret}
   
   set mP "VccMIB(U113)"
   set mPtxt "VccMIB(U113)"
   set min 1.140
   set max 1.260
+  set imin 0.54
+  set imax 3.54
   set shift 0
-  set ret [VerifyVoltageMP $mP $mPtxt $shift $min $max]
+  set ret [VerifyVoltageMP $mP $mPtxt $shift $min $max $imin $imax]
   if {$ret!=0} {return $ret}
   
   set mP "SFP"
   set mPtxt "SFP (U108)"
   set min 3.135
   set max 3.465
+  set imin 4.9
+  set imax 7.9
   set shift 1
-  set ret [VerifyVoltageMP $mP $mPtxt $shift $min $max]
+  set ret [VerifyVoltageMP $mP $mPtxt $shift $min $max $imin $imax]
   if {$ret!=0} {return $ret}
   
   set mP "VccPT"
   set mPtxt "VccPT (U106)"
   set min 1.71
   set max 1.89
+  set imin 2.35
+  set imax 5.35
   set shift 1
-  set ret [VerifyVoltageMP $mP $mPtxt $shift $min $max]
+  set ret [VerifyVoltageMP $mP $mPtxt $shift $min $max $imin $imax]
   if {$ret!=0} {return $ret}
   
   set mP "VccRT"
   set mPtxt "VccRT (U110)"
   set min 0.855
   set max 0.945
+  set imin 11.06
+  set imax 14.06
   set shift 1
-  set ret [VerifyVoltageMP $mP $mPtxt $shift $min $max]
+  set ret [VerifyVoltageMP $mP $mPtxt $shift $min $max $imin $imax]
   if {$ret!=0} {return $ret}
   
   set mP "VccRAM(U100)"
   set mPtxt "VccRAM(U100)"
   set min 0.855
   set max 0.945
+  set imin 7.04
+  set imax 10.04
   set shift 0
-  set ret [VerifyVoltageMP $mP $mPtxt $shift $min $max]
+  set ret [VerifyVoltageMP $mP $mPtxt $shift $min $max $imin $imax]
   if {$ret!=0} {return $ret}
   
   set mP "S10"
   set mPtxt "S10 (U98)"
   set min 3.135
   set max 3.465
+  set imin 1.79
+  set imax 4.79
   set shift 1
-  set ret [VerifyVoltageMP $mP $mPtxt $shift $min $max]
+  set ret [VerifyVoltageMP $mP $mPtxt $shift $min $max $imin $imax]
   if {$ret!=0} {return $ret}
   
   
@@ -2996,5 +3060,33 @@ proc AdminReset {} {
   if {$ret!=0} {return $ret}
  
   set ret [Login]
+  return $ret
+}
+# ***************************************************************************
+# FD_buttonPerf
+# ***************************************************************************
+proc FD_buttonPerf {} {
+  global gaSet buffer
+  set com $gaSet(comDut)
+  set ret [Login]
+  if {$ret!=0} {return $ret}
+  set txt "Press FT Button for about 5 seconds and then press OK"
+  RLSound::Play information
+  set res [DialogBox -type "OK Stop" -icon /images/info -title "FD Button Test" -message $txt]
+  update
+  if {$res=="OK"} {
+    set ret 0
+  } else {
+    set gaSet(fail) "User stop"
+    set ret -2
+  }
+  if {$ret!=0} {return $ret}
+  
+  set ret [Send $com "\r" "System Boot" 30]
+  if {$ret!=0} {
+    set gaSet(fail) "FD Button did not performed reset"
+    return $ret
+  }
+  
   return $ret
 }

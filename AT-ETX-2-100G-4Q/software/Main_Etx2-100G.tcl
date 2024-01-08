@@ -42,6 +42,7 @@ proc BuildTests {} {
       
       if ![string match *.PS.*  $gaSet(DutInitName)] {
         lappend lTestNames LedsTest ; # 28/04/2019 10:23:45 LedsTest1 LedsTest2
+        lappend lTestNames FD_button
         lappend lTestNames FinalSetToDefault 
       
         if {$gaSet(DefaultCF)!="" && $gaSet(DefaultCF)!="c:/aa"} {
@@ -204,6 +205,8 @@ proc SetToDefault {run} {
   
   set ret [FactDefault stda cont]
   if {$ret!=0} {return $ret}
+  
+  set ret [Login]
   
   return $ret
 }
@@ -574,6 +577,8 @@ proc SoftwareDownload {run} {
   set ret [SoftwareDownloadTest]
   if {$ret!=0} {return $ret}
   
+  set ret [Login]
+  
   return $ret
 }
 # ***************************************************************************
@@ -634,7 +639,7 @@ proc PowerSupplyTest {run} {
 # VoltageTest
 # ***************************************************************************
 proc VoltageTest {run} {
- set ret [VoltageTestPerf]
+  set ret [VoltageTestPerf]
   return $ret
 }
 # ***************************************************************************
@@ -753,4 +758,13 @@ proc On_Off {run} {
   AddToPairLog $gaSet(pair) "-------------------"
   AddToPairLog $gaSet(pair) "Run:$r, Pass:$p, Fail:$f"
   return $retRet
+}
+# ***************************************************************************
+# FD_button
+# ***************************************************************************
+proc FD_button {run} {
+  set ret [FD_buttonPerf]
+  if {$ret!=0} {return $ret}
+  set ret [Login]
+  return $ret
 }

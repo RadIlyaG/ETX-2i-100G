@@ -1172,7 +1172,10 @@ proc OpenTeraTerm {comName} {
 }  
 # *********
 
-proc VerifyVoltageMP {mP mPtxt shift min max} {
+# ***************************************************************************
+# VerifyVoltageMP
+# ***************************************************************************
+proc VerifyVoltageMP {mP mPtxt shift min max imin imax} {
   global buf gaSet
   set mpIndx [lsearch $buf $mP]
   set vReq [lindex $buf [expr {$mpIndx+$shift+1}]]
@@ -1185,8 +1188,16 @@ proc VerifyVoltageMP {mP mPtxt shift min max} {
     set gaSet(fail) "$mPtxt is $vRes. Should be between $min and $max"
     return -1
   }
+  set ival [string range $iRes 0 end-1]
+  if {$ival<$imin || $ival>$imax} {
+    set gaSet(fail) "$mPtxt is $iRes. Should be between $imin and $imax"
+    return -1
+  }
   return $ret
 }
+# ***************************************************************************
+# VerifySeqMP
+# ***************************************************************************
 proc VerifySeqMP {mP mPtxt shift min max} {
   global buf gaSet
   set mpIndx [lsearch $buf $mP]
