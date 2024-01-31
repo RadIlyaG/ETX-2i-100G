@@ -248,6 +248,14 @@ proc ReadBarcode {} {
   set readTrace 1
   if {[lsearch $gaSet(noTraceL) $gaSet(DutFullName)]!="-1"} {
     set readTrace 0
+  } else {
+    if {[string match *BootDownload* $gaSet(startFrom)] || [string match *Pages* $gaSet(startFrom)]} {
+      ## 11:30 31/01/2024
+      ## Read TraceID in tests BootDownload and Pages only
+      set readTrace 1
+    } else {
+      set readTrace 0
+    }
   }
   if {$gaSet(rbTestMode) eq "On_Off"} {
     set readTrace 0
