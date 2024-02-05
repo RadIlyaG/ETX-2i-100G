@@ -787,9 +787,9 @@ proc RetriveDutFam {{dutInitName ""}} {
     set PS WR
   } elseif {[string match *.ACDC* $dutInitName]==1} {
     set PS ACDC
-  } elseif {[string match *DC* $dutInitName]==1} {
+  } elseif {[string match *DC* $dutInitName]==1 || [string match *DRF* $dutInitName]==1} {
     set PS DC
-  } elseif {[string match *.AC* $dutInitName]==1} {
+  } elseif {[string match *.AC* $dutInitName]==1 || [string match *ARF* $dutInitName]==1} {
     set PS AC
   }
   foreach {b r p d ps np up} [split $gaSet(dutFam) .] {
