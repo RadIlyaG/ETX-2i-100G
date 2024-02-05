@@ -105,9 +105,9 @@ proc PS_IDTest {} {
 #   if {$ret!=0} {return $ret}
   set ret [Send $com "exit all\r" ETX-2]
   if {$ret!=0} {return $ret}
-  set ret [Send $com "configure chassis\r" chassis]
+  set ret [Send $com "configure chassis\r" ">chassis"]
   if {$ret!=0} {return $ret}
-  set ret [Send $com "show environment\r" chassis]
+  set ret [Send $com "show environment\r" ">chassis"]
   if {$ret!=0} {return $ret}
   
   foreach {b r p d ps np up} [split $gaSet(dutFam) .] {}
@@ -164,7 +164,7 @@ proc PS_IDTest {} {
   puts "fanSt:$fanSt"
   if {$b=="19"} { 
     if {$fanSt!="1 OK 2 OK 3 OK 4 OK"} {
-      set ret [Send $com "show environment\r" chassis]
+      set ret [Send $com "show environment\r" ">chassis"]
       if {$ret!=0} {return $ret}
       regexp {FAN Status[\s-]+(.+)\sSensor } $buffer ma fanSt
       if ![info exists fanSt] {
