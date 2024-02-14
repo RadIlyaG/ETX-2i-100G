@@ -2529,6 +2529,9 @@ proc VoltageTestPerf {} {
     if {$ret!=0} {return $ret}
   } 
   
+  set ret [Wait "Wait fot SFPs ..." 70]
+  if {$ret!=0} {return $ret}
+  
   foreach {b r p d psType np up} [split $gaSet(dutFam) .] {}
   
   set com $gaSet(comDut)
