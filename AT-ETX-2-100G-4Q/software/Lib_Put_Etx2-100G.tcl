@@ -1312,6 +1312,17 @@ proc ReadEthPortStatus {port} {
     return -1  
   }
   
+  set res [regexp {Operational Status : ([\w\s]+) Connector} $bu ma val]
+  if {$res==0} {
+    set gaSet(fail) "Read Operational Status of SFP in port $port fail"
+    return -1
+  }
+  puts "Operational Status:<$val>"
+  if {$val!="Up"} {
+    set gaSet(fail) "The Operational Status of SFP in port $port is \'$val\' instead of \'Up\'"
+    return -1  
+  }
+  
   return 0
 }
 

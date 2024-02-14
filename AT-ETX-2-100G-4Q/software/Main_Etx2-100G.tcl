@@ -438,6 +438,11 @@ proc SFP_ID {run} {
     #set ret [Login]
     if {$ret!=0} {return $ret}
   }
+  
+  if {$run=="on_off"} {
+    set ret [Wait "Wait fot SFPs ..." 90]
+    if {$ret!=0} {return $ret}
+  }  
       
   if {$b=="19"} {
     set portsL [list 3/1 3/2 3/3 3/4 1/1 1/2 1/3 1/4 1/5 1/6 1/7 1/8 2/1 2/2 2/3 2/4 2/5 2/6 2/7 2/8] 
@@ -689,12 +694,6 @@ proc On_Off {run} {
     }
   }
   
-  #if {[string is integer $gaSet(entDUT)] && [string length $gaSet(entDUT)]>0} {
-  #  set offOnQty $gaSet(entDUT)
-  #} else {
-  #  set offOnQty 50
-  #  set gaSet(entDUT) $offOnQty
-  #}
   set r [set p [set f 0]]
   set ::breakLoginOnError 0
   
@@ -707,23 +706,18 @@ proc On_Off {run} {
     set ret [Wait "$offDur sec in OFF state" $offDur white]
     if {$ret!=0} {return $ret} 
     Power all on
-    set ret [Login]
+    ## 08:48 08/02/2024 set ret [Login]
+    set ret [SFP_ID on_off]
     if {$ret=="-2"} {return $ret}
     if {$ret==0} {
       set res PASS
       incr p
     } elseif {$ret=="-1"} {
-      # if {[string match {*occured during*} $gaSet(fail)]} {
-        # set res FAIL_$gaSet(fail)
-      # } else {
-        # set res FAIL
-      # }
       set res FAIL_$gaSet(fail)
       set retRet -1
       incr f
       AddToPairLog $gaSet(pair) "OFF-ON $i Result Power ON: $res"
       
-      ## 07:14 11/05/2023
       if {[string match {*occured during*} $gaSet(fail)]} {
         AddToPairLog $gaSet(pair) "Admin Reset"
         set ret [AdminReset]
@@ -747,7 +741,6 @@ proc On_Off {run} {
     set ret [Wait "$randSeconds sec in ON state" $randSeconds white]
     AddToPairLog $gaSet(pair) "$randSeconds sec in ON state"
     AddToPairLog $gaSet(pair) "OFF-ON $i Result:$res"
-    #set st [$gaSet(startTime) cget -text]
     set st "$gaSet(logTime) Run:$r, Pass:$p, Fail:$f"
     $gaSet(startTime) configure -text $st
     if {$ret=="-1" && $sof=="yes"} {
