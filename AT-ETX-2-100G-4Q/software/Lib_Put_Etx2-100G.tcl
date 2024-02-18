@@ -226,7 +226,8 @@ proc PS_IDTest {} {
     set gaSet(fail) "The TACHO is $tacho"  
     return -1
   }
-  set ret [Send $com "HWPORT_memSize\r" "00"]
+  set ret [Send $com "HWPORT_memSize\r" "stam" 2]
+  set ret 0
   if {$ret!=0} {
     set gaSet(fail) "Read HWPORT_memSize fail"  
     return -1
