@@ -5,7 +5,7 @@ switch -exact -- $gaSet(pair) {
       set gaSet(comAux)   5
       console eval {wm geometry . +150+1}
       console eval {wm title . "Con 1"} 
-      set gaSet(pioBoxSerNum) FT7EUBTT  
+      set gaSet(pioBoxSerNum) FT80ZP9K  
   }
   2 {
       set gaSet(comDut)    2
