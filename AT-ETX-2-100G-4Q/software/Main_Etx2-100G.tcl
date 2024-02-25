@@ -35,7 +35,7 @@ proc BuildTests {} {
       }
     }
     
-    lappend lTestNames DataTransmission_Set DataTransmission_Test
+    lappend lTestNames DataTransmission_Set DataTransmission_FecOff DataTransmission_FecOn
     
     if {$gaSet(rbTestMode)=="Full"} {
       lappend lTestNames HotSwap
@@ -256,12 +256,15 @@ proc DataTransmission_Set  {run} {
 }  
 
 # ***************************************************************************
-# DataTransmission_Test
+# DataTransmission_FecOff
 # ***************************************************************************
-proc DataTransmission_Test  {run} {
+proc DataTransmission_FecOff  {run} {
   global gaSet
   Power all on
   
+  set ret [FecMode off]
+  if {$ret!=0} {return $ret}
+  AddToPairLog $gaSet(pair) "FEC: off"
   set ret [MeaGenerator_Start]
   if {$ret!=0} {return $ret}
   set ret [Wait "Data is running" 10 white]
@@ -274,14 +277,33 @@ proc DataTransmission_Test  {run} {
   set ret [Wait "Data is running" 120 white]
   if {$ret!=0} {return $ret}
   set ret [MeaGenerator_Check]
-  if {$ret!=0} {
-#     set ret [MeaGenerator_Start]
-#     if {$ret!=0} {return $ret}
-#     set ret [Wait "Data is running" 120 white]
-#     if {$ret!=0} {return $ret}
-#     set ret [MeaGenerator_Check]
-#     if {$ret!=0} {return $ret}
-  }
+  if {$ret!=0} {return $ret}
+  
+  return $ret
+}  
+# ***************************************************************************
+# DataTransmission_FecOn
+# ***************************************************************************
+proc DataTransmission_FecOn  {run} {
+  global gaSet
+  Power all on
+  
+  set ret [FecMode off]
+  if {$ret!=0} {return $ret}
+  AddToPairLog $gaSet(pair) "FEC: off"
+  set ret [MeaGenerator_Start]
+  if {$ret!=0} {return $ret}
+  set ret [Wait "Data is running" 10 white]
+  if {$ret!=0} {return $ret}
+  set ret [MeaGenerator_Check]
+  if {$ret!=0} {return $ret}
+  
+  set ret [MeaGenerator_Start]
+  if {$ret!=0} {return $ret}
+  set ret [Wait "Data is running" 120 white]
+  if {$ret!=0} {return $ret}
+  set ret [MeaGenerator_Check]
+  if {$ret!=0} {return $ret}
   
   return $ret
 }  
