@@ -264,7 +264,6 @@ proc DataTransmission_FecOff  {run} {
   
   set ret [FecMode off]
   if {$ret!=0} {return $ret}
-  AddToPairLog $gaSet(pair) "FEC: off"
   set ret [MeaGenerator_Start]
   if {$ret!=0} {return $ret}
   set ret [Wait "Data is running" 10 white]
@@ -290,7 +289,6 @@ proc DataTransmission_FecOn  {run} {
   
   set ret [FecMode off]
   if {$ret!=0} {return $ret}
-  AddToPairLog $gaSet(pair) "FEC: off"
   set ret [MeaGenerator_Start]
   if {$ret!=0} {return $ret}
   set ret [Wait "Data is running" 10 white]

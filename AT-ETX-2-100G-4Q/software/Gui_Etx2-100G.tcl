@@ -468,6 +468,8 @@ proc ButRun {} {
     catch {unset gaSet(dnfvMac1)}
     catch {unset gaSet(dnfvMac2)}
     
+    AddToPairLog $gaSet(pair) "$gaSet(operatorID) $gaSet(operator)"
+    
     set ret 0
     GuiPower all 1 ; ## power ON before OpenRL
     set gaSet(plEn) 0

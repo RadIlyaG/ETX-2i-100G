@@ -3117,16 +3117,24 @@ proc FecMode {fec} {
   foreach port [list 3/1 3/2 3/3 3/4] {
     Status "Set FEC of port $port to $fec"
     Send $com "exit all\r" stam 0.25 
-    Send $com "config port ethernet $port\r" "eth($port)"
-    Send $com "shutdown\r" "eth($port)"
-    Send $com "fec $fec\r" "eth($port)"
-    Send $com "no shutdown\r" "eth($port)"
+    set gaSet(fail) "Config FEC of $port to $fec fail"
+    set ret [Send $com "config port ethernet $port\r" "eth($port)"]
+    if {$ret!=0} {return $ret}
+    set ret [Send $com "shutdown\r" "eth($port)"]
+    if {$ret!=0} {return $ret}
+    set ret [Send $com "fec $fec\r" "eth($port)"]
+    if {$ret!=0} {return $ret}
+    set ret [Send $com "no shutdown\r" "eth($port)"]
+    if {$ret!=0} {return $ret}
   }  
   foreach port [list 3/1 3/2 3/3 3/4] {
     Status "Get FEC mode of Port $port"
+    set gaSet(fail) "Check FEC of $port fail"
     Send $com "exit all\r" stam 0.25 
-    Send $com "config port ethernet $port\r" "eth($port)"
-    Send $com "info d\r" "bridge-mode"
+    set ret [Send $com "config port ethernet $port\r" "eth($port)"]
+    if {$ret!=0} {return $ret}
+    set ret [Send $com "info d\r" "bridge-mode"]
+    if {$ret!=0} {return $ret}
     set res [regexp {fec\s+(\w+)\s} $buffer ma val]
     if {$res==0} {
       set gaSet(fail) "Get FEC mode of Port $port fail"
