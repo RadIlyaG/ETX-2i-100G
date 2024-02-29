@@ -314,6 +314,7 @@ proc About {} {
 proc ButRun {} {
   global gaSet gaGui glTests gRelayState
   
+  Ramzor green on
   pack forget $gaGui(frFailStatus)
   Status ""
   set gaSet(runStatus) ""
@@ -445,6 +446,7 @@ proc ButRun {} {
 #   puts "[MyTime] source Lib_Put_RicEth_$gaSet(dutFam).tcl" ; update
 #   source Lib_Put_RicEth_$gaSet(dutFam).tcl
 #   
+  
   if {$ret==0} {
     IPRelay-Green
     Status ""
@@ -507,6 +509,7 @@ proc ButRun {} {
     IPRelay-LoopRed
   }
   
+  Ramzor red on
   if {$ret==0} {
     RLSound::Play pass
     Status "Done"  green

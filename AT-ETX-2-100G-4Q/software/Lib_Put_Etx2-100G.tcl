@@ -619,7 +619,7 @@ proc ReadMac {} {
   if {($mac2<0x0020D2500000 || $mac2>0x0020D2FFFFFF) && ($mac2<0x1806F5000000 || $mac2>0x1806F5FFFFFF )} {
     RLSound::Play fail
     set gaSet(fail) "The MAC of UUT is $mac"
-    set ret [DialogBox -type "Terminate Continue" -icon /images/error -title "MAC check"\
+    set ret [DialogBoxRamzor -type "Terminate Continue" -icon /images/error -title "MAC check"\
         -text $gaSet(fail) -aspect 2000]
     if {$ret=="Terminate"} {
       return -1
@@ -1993,7 +1993,7 @@ proc LedsTest_perf {} {
   MNG-ETH LINK LED is Green and ACT LED is Orange\n\n\
   Fans rotate"
   RLSound::Play information
-  set res [DialogBox -type "OK Fail" -icon /images/question -title "LEDs Test" -message $txt]
+  set res [DialogBoxRamzor -type "OK Fail" -icon /images/question -title "LEDs Test" -message $txt]
   update
   if {$res=="OK"} {
     set ret 0
@@ -2006,7 +2006,7 @@ proc LedsTest_perf {} {
   
   set txt "Remove SFPPs and QSFPs from all ports and verify that all the LINK leds are off"
   RLSound::Play information
-  set res [DialogBox -type "OK Fail" -icon /images/question -title "LEDs Test" -message $txt]
+  set res [DialogBoxRamzor -type "OK Fail" -icon /images/question -title "LEDs Test" -message $txt]
   update
   if {$res=="OK"} {
     set ret 0
@@ -2041,7 +2041,7 @@ proc LedsTest_perf {} {
   TST LED is Orange\n\
   ALR LED is Red"
   RLSound::Play information
-  set res [DialogBox -type "OK Fail" -icon /images/question -title "LEDs Test" -message $txt]
+  set res [DialogBoxRamzor -type "OK Fail" -icon /images/question -title "LEDs Test" -message $txt]
   update
   if {$res=="OK"} {
     set ret 0
@@ -3087,7 +3087,7 @@ proc FD_buttonPerf {} {
   if {$ret!=0} {return $ret}
   set txt "Press FT Button for about 5 seconds and then press OK"
   RLSound::Play information
-  set res [DialogBox -type "OK Stop" -icon /images/info -title "FD Button Test" -message $txt]
+  set res [DialogBoxRamzor -type "OK Stop" -icon /images/info -title "FD Button Test" -message $txt]
   update
   if {$res=="OK"} {
     set ret 0

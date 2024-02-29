@@ -154,6 +154,7 @@ source lib_SQlite.tcl
 source LibUrl.tcl
 source Lib_GetOperator.tcl
 source lib_DeleteOldApp.tcl
+source Lib_Ramzor.tcl
 
 DeleteOldApp
 DeleteOldUserDef

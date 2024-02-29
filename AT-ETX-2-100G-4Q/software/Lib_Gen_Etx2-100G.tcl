@@ -1453,3 +1453,11 @@ proc CheckFolder4NewFiles {path secNow} {
     }
   }
 }
+# ***************************************************************************
+# DialogBoxRamzor
+# ***************************************************************************
+proc DialogBoxRamzor {args}  {
+  Ramzor red on
+  eval DialogBox $args
+  Ramzor green on
+}

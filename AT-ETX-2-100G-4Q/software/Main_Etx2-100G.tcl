@@ -113,7 +113,7 @@ proc Testing {} {
     
     set txt "Set SW2/2 to ON"
     RLSound::Play information
-    set res [DialogBox -type "OK Cancel" -icon /images/info -title "SW2/2 ON" -message $txt]
+    set res [DialogBoxRamzor -type "OK Cancel" -icon /images/info -title "SW2/2 ON" -message $txt]
     update
     if {$res=="OK"} {
       set ret 0
@@ -322,7 +322,7 @@ proc HotSwap {run} {
     On PS$ps the LED is ORANGE\n\
     On Front Panel PWR LED is RED\n\
     20 Data Ports LINK/ACT LEDs are Blinking Green"
-    set res [DialogBox -type "OK Fail" -icon /images/question -title "Hot Swap Test" -message $txt]
+    set res [DialogBoxRamzor -type "OK Fail" -icon /images/question -title "Hot Swap Test" -message $txt]
     update
     if {$res=="OK"} {
       set ret 0
@@ -345,7 +345,7 @@ proc HotSwap {run} {
     if {$ret==0} {
       RLSound::Play information
       set txt "Extract PS$ps"
-      set res [DialogBox -type "OK Cancel" -icon /images/question -title "Hot Swap Test" -message $txt]
+      set res [DialogBoxRamzor -type "OK Cancel" -icon /images/question -title "Hot Swap Test" -message $txt]
       update
       if {$res=="OK"} {
         set ret 0
@@ -369,7 +369,7 @@ proc HotSwap {run} {
       RLSound::Play information
 #       set txt "Reinsert PS$ps and check Front Panel LED is RED"
       set txt "Reinsert PS$ps and it's power cord"
-      set res [DialogBox -type "OK Cancel" -icon /images/question -title "Hot Swap Test" -message $txt]
+      set res [DialogBoxRamzor -type "OK Cancel" -icon /images/question -title "Hot Swap Test" -message $txt]
       update
       if {$res=="OK"} {
         set ret 0
@@ -386,7 +386,7 @@ proc HotSwap {run} {
       set txt "Verify the following:\n\n\
       On PS$ps the LED is GREEN\n\
       On Front Panel PWR LED is GREEN"
-      set res [DialogBox -type "OK Fail" -icon /images/question -title "Hot Swap Test" -message $txt]
+      set res [DialogBoxRamzor -type "OK Fail" -icon /images/question -title "Hot Swap Test" -message $txt]
       update
       if {$res=="OK"} {
         set ret 0
