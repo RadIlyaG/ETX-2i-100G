@@ -374,7 +374,9 @@ proc ButRun {} {
       set ret 0
       set gaSet(operator) ""
     } else {  
+      Ramzor red on
       set ret [GuiReadOperator]
+      Ramzor green on
     }
   }
   
