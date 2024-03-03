@@ -49,7 +49,7 @@ proc BuildTests {} {
           lappend lTestNames LoadDefaultConfiguration
         }
         
-        if {[string match *david-ya* [info host]]} {
+        if $::repairMode {
           ##  don't do it at David's
         } else {
           lappend lTestNames Mac_BarCode

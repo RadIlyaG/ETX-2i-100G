@@ -21,6 +21,13 @@ source lib_DeleteOldApp.tcl
 DeleteOldApp
 DeleteOldUserDef
 
+set host_name  [info host]
+if {[string match *avraham-bi* $host_name] || [string match *david-ya* $host_name] || [string match *ofer-m-* $host_name]} {
+  set ::repairMode 1
+} else {
+  set ::repairMode 0
+}
+
 after 1000
 set ::RadAppsPath c:/RadApps
 

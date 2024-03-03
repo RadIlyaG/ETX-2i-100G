@@ -12,6 +12,9 @@ proc GUI {} {
   if {$gaSet(eraseTitle)==1} {
     wm title . "$gaSet(pair) : "
   }
+  if {![info exists ::repairMode]} {
+    set ::repairMode 0
+  }
   
   wm protocol . WM_DELETE_WINDOW {Quit}
   wm geometry . $gaGui(xy)
@@ -419,7 +422,7 @@ proc ButRun {} {
     }
   
   
-    if {$gaSet(relDebMode)=="Debug" && [string match *david-ya* [info host]]==0} {
+    if {$gaSet(relDebMode)=="Debug" && $::repairMode==0} {
       #RLSound::Play beep
       RLSound::Play information
       set txt "Be aware!\r\rYou are about to perform tests in Debug mode.\r\r\
@@ -478,7 +481,9 @@ proc ButRun {} {
     catch {unset gaSet(dnfvMac1)}
     catch {unset gaSet(dnfvMac2)}
     
-    AddToPairLog $gaSet(pair) "$gaSet(operatorID) $gaSet(operator)"
+    if !$::repairMode {
+      AddToPairLog $gaSet(pair) "$gaSet(operatorID) $gaSet(operator)"
+    }  
     
     set ret 0
     GuiPower all 1 ; ## power ON before OpenRL
@@ -1432,7 +1437,7 @@ proc GuiReadOperator {} {
   catch {array unset gaGetOpDBox} 
   if !$::AtpExist {set gaSet(operator) 0; return 0}
   #set ret [GetOperator -i pause.gif -ti "title Get Operator" -te "text Operator's Name "]
-  if {[string match *david-ya* [info host]]} {
+  if {$::repairMode} {
     set ret "David Yashar"
   } else {
     set sn [clock seconds]
