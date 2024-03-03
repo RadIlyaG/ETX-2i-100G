@@ -10,7 +10,7 @@
 ## 1. USB_RELAY_DEVICE.dll
 ## 2. hidusb-relay-cmd.exe
 ##
-## Coment:
+## Comment:
 ## Relay without power default state: n.c --> com
 ######################################################
 proc Ramzor {color state {cmdLoc .}} {
