@@ -1458,6 +1458,8 @@ proc CheckFolder4NewFiles {path secNow} {
 # ***************************************************************************
 proc DialogBoxRamzor {args}  {
   Ramzor red on
-  eval DialogBox $args
+  set ret [eval DialogBox $args]
+  puts "DialogBoxRamzor ret after DialogBox:<$ret>"
   Ramzor green on
+  return $ret
 }
