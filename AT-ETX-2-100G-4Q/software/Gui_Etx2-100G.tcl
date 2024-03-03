@@ -99,9 +99,12 @@ proc GUI {} {
       }
       }  
       {separator}
-      {radiobutton "TDS340"  init {} {} -value Tds340 -variable gaSet(scopeModel)}
-      {radiobutton "TDS520A" init {} {} -value Tds520A -variable gaSet(scopeModel)}   
-      {radiobutton "DSOX1102A" init {} {} -value DSOX1102A -variable gaSet(scopeModel)}             
+      {cascad "Ramzor" {} fs 0 {
+        {command "Red" {} {} {} -command {Ramzor red on}} 
+  		  {command "Green" {} {} {} -command {Ramzor green on}} 
+        {command "OFF" {} {} {} -command {Ramzor all off}}         
+      }     
+      }      
     }
     "&MUX connections" tools tools 0 {
       {command "ioToGenMngToPc" init {} {} -command {GuiMuxMngIO ioToGenMngToPc ioToGen}}	 
@@ -139,7 +142,9 @@ proc GUI {} {
 #       {separator}
 # {command "Update INIT and UserDefault files on all the Testers" {} "Exit" {} -command {UpdateInitsToTesters}}
       # {separator}
-      
+  #{radiobutton "TDS340"  init {} {} -value Tds340 -variable gaSet(scopeModel)}
+  #    {radiobutton "TDS520A" init {} {} -value Tds520A -variable gaSet(scopeModel)}   
+  #    {radiobutton "DSOX1102A" init {} {} -value DSOX1102A -variable gaSet(scopeModel)}               
 
   set mainframe [MainFrame .mainframe -menu $descmenu]
   
@@ -270,6 +275,7 @@ proc GUI {} {
   bind . <Control-i> {GuiInventory}
   bind . <Alt-r> {ButRun}
   bind . <Alt-o> {set gaSet(oneTest) 1}
+  bind . <Control-f> {Ramzor all off}
 
   .menubar.tterminal entryconfigure 0 -label "UUT: COM $gaSet(comDut)"
   .menubar.tterminal entryconfigure 1 -label "AUX: COM $gaSet(comAux)"
