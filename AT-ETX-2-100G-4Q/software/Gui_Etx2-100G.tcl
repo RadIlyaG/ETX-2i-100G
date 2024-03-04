@@ -382,6 +382,7 @@ proc ButRun {} {
     if {$gaSet(rbTestMode) eq "On_Off"} {
       set ret 0
       set gaSet(operator) ""
+      set gaSet(operatorID) ""
     } else {  
       Ramzor red on
       set ret [GuiReadOperator]
