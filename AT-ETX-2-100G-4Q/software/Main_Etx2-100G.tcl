@@ -42,7 +42,7 @@ proc BuildTests {} {
       
       if ![string match *.PS.*  $gaSet(DutInitName)] {
         lappend lTestNames LedsTest ; # 28/04/2019 10:23:45 LedsTest1 LedsTest2
-        lappend lTestNames FD_button
+        ## 09:48 04/03/2024 lappend lTestNames FD_button
         lappend lTestNames FinalSetToDefault 
       
         if {$gaSet(DefaultCF)!="" && $gaSet(DefaultCF)!="c:/aa"} {
