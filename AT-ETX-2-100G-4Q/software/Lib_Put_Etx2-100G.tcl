@@ -2557,8 +2557,8 @@ proc VoltageTestPerf {} {
   set mPtxt "MAIN (U68)"
   set min 3.135
   set max 3.465
-  set imin 1.06
-  set imax 4.06
+  set imin 0.85 ; #1.06
+  set imax 3.85 ; #4.06
   set shift 1
   set ret [VerifyVoltageMP $mP $mPtxt $shift $min $max $imin $imax]
   if {$ret!=0} {return $ret}
@@ -2567,8 +2567,8 @@ proc VoltageTestPerf {} {
   set mPtxt "VccMIB(U113)"
   set min 1.140
   set max 1.260
-  set imin 0.54
-  set imax 3.54
+  set imin 0   ; #0.54
+  set imax 2.5 ; #3.54
   set shift 0
   set ret [VerifyVoltageMP $mP $mPtxt $shift $min $max $imin $imax]
   if {$ret!=0} {return $ret}
@@ -2577,8 +2577,8 @@ proc VoltageTestPerf {} {
   set mPtxt "SFP (U108)"
   set min 3.135
   set max 3.465
-  set imin 4.9
-  set imax 7.9
+  set imin 4.7 ; #4.9
+  set imax 7.7 ; #7.9
   set shift 1
   set ret [VerifyVoltageMP $mP $mPtxt $shift $min $max $imin $imax]
   if {$ret!=0} {return $ret}
@@ -2587,8 +2587,8 @@ proc VoltageTestPerf {} {
   set mPtxt "VccPT (U106)"
   set min 1.71
   set max 1.89
-  set imin 2.35
-  set imax 5.35
+  set imin 1.8 ; #2.35
+  set imax 4.8 ; #5.35
   set shift 1
   set ret [VerifyVoltageMP $mP $mPtxt $shift $min $max $imin $imax]
   if {$ret!=0} {return $ret}
@@ -2597,8 +2597,8 @@ proc VoltageTestPerf {} {
   set mPtxt "VccRT (U110)"
   set min 0.855
   set max 0.945
-  set imin 11.06
-  set imax 14.06
+  set imin 9.8  ; #11.06
+  set imax 12.8 ; #14.06
   set shift 1
   set ret [VerifyVoltageMP $mP $mPtxt $shift $min $max $imin $imax]
   if {$ret!=0} {return $ret}
@@ -2607,8 +2607,8 @@ proc VoltageTestPerf {} {
   set mPtxt "VccRAM(U100)"
   set min 0.855
   set max 0.945
-  set imin 7.04
-  set imax 10.04
+  set imin 5.8 ; #7.04
+  set imax 8.8 ; #10.04
   set shift 0
   set ret [VerifyVoltageMP $mP $mPtxt $shift $min $max $imin $imax]
   if {$ret!=0} {return $ret}
@@ -2617,8 +2617,8 @@ proc VoltageTestPerf {} {
   set mPtxt "S10 (U98)"
   set min 3.135
   set max 3.465
-  set imin 1.79
-  set imax 4.79
+  set imin 1.9 ; #1.79
+  set imax 4.9 ; #4.79
   set shift 1
   set ret [VerifyVoltageMP $mP $mPtxt $shift $min $max $imin $imax]
   if {$ret!=0} {return $ret}
