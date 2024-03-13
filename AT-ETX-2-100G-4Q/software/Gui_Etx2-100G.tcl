@@ -549,11 +549,16 @@ proc ButRun {} {
     if {$gaSet(runStatus)!=""} {
       UnregIdBarcode $gaSet(1.barcode1)
     }
+    
+    # if {$gaSet(rbTestMode) eq "On_Off"} {
+      # set gaSet(fail) "The OFF-ON Test fail. See log file" 
+    # } 
 	  pack $gaGui(frFailStatus)  -anchor w
 	  $gaSet(runTime) configure -text ""
 	  RLSound::Play fail
 	  Status "Test FAIL"  red
-	  file rename -force $gaSet(log.$gaSet(pair)) [file rootname $gaSet(log.$gaSet(pair))]-Fail.txt       
+	  file rename -force $gaSet(log.$gaSet(pair)) [file rootname $gaSet(log.$gaSet(pair))]-Fail.txt
+    set gaSet(log.$gaSet(pair))  [file rootname $gaSet(log.$gaSet(pair))]-Fail.txt   
     ##27/11/2015 14:32:38   
 #     if {$gaSet(failAnd)=="stay"} {   
 #       set gaSet(startFrom) $gaSet(curTest)

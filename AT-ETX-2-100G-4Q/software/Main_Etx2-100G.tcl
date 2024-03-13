@@ -151,6 +151,10 @@ proc Testing {} {
       set retTxt "PASS."
     } else {
       set retTxt "FAIL. Reason: $gaSet(fail)"
+      if {$gaSet(rbTestMode) eq "On_Off"} {
+        set gaSet(fail) "The OFF-ON Test fail. See log file" 
+        set retTxt $gaSet(fail)
+      } 
     }
 #     AddToLog "Test \'$testName\' $retTxt"
     AddToPairLog $gaSet(pair) "Test \'$testName\' $retTxt"
