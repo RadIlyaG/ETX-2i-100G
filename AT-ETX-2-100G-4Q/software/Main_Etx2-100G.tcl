@@ -767,7 +767,7 @@ proc On_Off {run} {
     AddToPairLog $gaSet(pair) "OFF-ON $i Result:$res"
     set st "$gaSet(logTime) Run:$r, Pass:$p, Fail:$f"
     $gaSet(startTime) configure -text $st
-    if {$ret=="-1" && $sof=="yes"} {
+    if {$retRet=="-1" && $sof=="yes"} {
       break
     }
   }
