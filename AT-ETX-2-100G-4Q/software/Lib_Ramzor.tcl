@@ -26,6 +26,7 @@ proc Ramzor {color state {cmdLoc .}} {
   }
   
   foreach Id {1 2} {
+    puts "OFF $Id"
     if [catch {exec $cmdLoc/hidusb-relay-cmd.exe off $Id} res] {
       return $res
     }
@@ -33,8 +34,12 @@ proc Ramzor {color state {cmdLoc .}} {
   after 500
   foreach Id $li col $colLi {
     puts "$col $state"
-    if [catch {exec $cmdLoc/hidusb-relay-cmd.exe $state $Id} res] {
-      return $res
+    if {$state=="on"} {
+      if [catch {exec $cmdLoc/hidusb-relay-cmd.exe $state $Id} res] {
+        return $res
+      }
+    } else {
+      puts "Already OFF"
     }
   }
   return 0
