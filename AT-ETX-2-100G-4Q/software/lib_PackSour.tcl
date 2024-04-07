@@ -162,6 +162,7 @@ source LibUrl.tcl
 source Lib_GetOperator.tcl
 source lib_DeleteOldApp.tcl
 source Lib_Ramzor.tcl
+source lib_EcoCheck.tcl
 
 DeleteOldApp
 DeleteOldUserDef
