@@ -584,6 +584,10 @@ proc ButRun {} {
     update
   }
   
+  set res [DialogBox -type "OK" -icon /images/info -title "Finish" -message "The test is done" ]
+  update
+  Ramzor all off
+  
   if {$gaSet(eraseTitle)==1} {
     wm title . "$gaSet(pair) : "
   }
