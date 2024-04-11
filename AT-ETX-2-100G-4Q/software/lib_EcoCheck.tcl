@@ -1,13 +1,9 @@
-## source \\\\prod-svm1\\tds\\Temp\\SQLiteDB\\EcoNoiNpi\\lib_EcoCheck.tcl
-##console show
-package require sqlite3
-set db_file \\\\prod-svm1\\tds\\Temp\\SQLiteDB\\EcoCheck.db
-
 # ***************************************************************************
 # MainEcoCheck
-# MainEcoCheck 1001793762
+# MainEcoCheck ETX-2-100G-4QSFP-16SFPP-GB-M
 # ***************************************************************************
 proc MainEcoCheck {unit} {
+  set ::db_file \\\\prod-svm1\\tds\\Temp\\SQLiteDB\\EcoCheck.db
   set ret [DbFileExists]
   if {$ret!=0} {return $ret}
   
@@ -22,10 +18,10 @@ proc MainEcoCheck {unit} {
     } else {
       set verb "are"
     }
-    set txt "The following change/s for \'$unit\' $verb released:\n\n$lis\n\nConsult with your team Leader"
+    # set txt "The following change/s for \'$unit\' $verb released:\n\n$lis\n\nConsult with your team Leader"
     set txt "There $verb unapproved ECO/NPI/NOI for the tested option:\n\n$lis\n\n
     The ATE is locked. Contact your Team Leader"
-    tk_messageBox -message $txt -type ok -icon error -title "Unapproved changes"
+    # tk_messageBox -message $txt -type ok -icon error -title "Unapproved changes"
     set ret $txt
   } 
   return $ret  
@@ -60,8 +56,12 @@ proc CheckDB {unit} {
 
 if {[lindex $argv 0]=="Run"} {
   console show
-  MainEcoCheck ETX-2-100G-4QSFP-16SFPP-GB-M
-  puts "MainEcoCheck ETX-2-100G-4QSFP-16SFPP-GB-M"
+  package require sqlite3
+  set ret [MainEcoCheck ETX-2-100G-4QSFP-16SFPP-GB-M]
+  if {$ret!=0} {
+    tk_messageBox -message $ret -type ok -icon error -title "Unapproved changes"
+  }
+  # puts "MainEcoCheck ETX-2-100G-4QSFP-16SFPP-GB-M"
   #exit
 }  
 #console show

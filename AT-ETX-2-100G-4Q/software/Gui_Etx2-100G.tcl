@@ -383,18 +383,33 @@ proc ButRun {} {
       set ret 0
       set gaSet(operator) ""
       set gaSet(operatorID) ""
-    } else {  
-      Ramzor red on
-      set ret [GuiReadOperator]
-      Ramzor green on
+    } else {        
+      if {$::repairMode} {
+        set ret 0
+      } else {  
+        set ret [MainEcoCheck $gaSet(DutFullName)]
+        if {$ret!=0} {
+          set gaSet(log.$gaSet(pair)) c:/logs/${gaSet(logTime)}.txt
+          AddToPairLog $gaSet(pair) $ret
+          RLSound::Play information
+          DialogBoxRamzor -type "OK" -icon /images/error -title "Unapproved changes" -message $ret
+          set ret -2
+        }
+      }
+      if {$ret==0} {
+        Ramzor red on
+        set ret [GuiReadOperator]
+        Ramzor green on
+        if {$ret!=0} {
+          set ret -3
+        }
+      }
     }
   }
   
   parray gaSet *arco*
   parray gaSet *rato*
-  if {$ret!=0} {
-    set ret -3
-  } elseif {$ret==0} {
+  if {$ret==0} {
     set ret [ReadBarcode]
     parray gaSet *arco*
     parray gaSet *rato*
