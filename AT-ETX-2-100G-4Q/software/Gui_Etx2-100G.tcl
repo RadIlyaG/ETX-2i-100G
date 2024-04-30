@@ -4,7 +4,8 @@
 proc GUI {} {
   global gaSet gaGui glTests  
   
-  wm title . "$gaSet(pair) : $gaSet(DutFullName)"
+  #wm title . "$gaSet(pair) : $gaSet(DutFullName)"
+  wm title . "$gaSet(pair)"
   if {![info exists gaSet(eraseTitle)]} {
     set gaSet(eraseTitle) 1
   }
@@ -387,14 +388,16 @@ proc ButRun {} {
       if {$::repairMode} {
         set ret 0
       } else {  
-        set ret [MainEcoCheck $gaSet(DutFullName)]
-        if {$ret!=0} {
-          set gaSet(log.$gaSet(pair)) c:/logs/${gaSet(logTime)}.txt
-          AddToPairLog $gaSet(pair) $ret
-          RLSound::Play information
-          DialogBoxRamzor -type "OK" -icon /images/error -title "Unapproved changes" -message $ret
-          set ret -2
-        }
+        set ret 0
+        ## The MainEcoCheck is performed at GetDbrName 
+        # set ret [MainEcoCheck $gaSet(DutFullName)]
+        # if {$ret!=0} {
+          # set gaSet(log.$gaSet(pair)) c:/logs/${gaSet(logTime)}.txt
+          # AddToPairLog $gaSet(pair) $ret
+          # RLSound::Play information
+          # DialogBoxRamzor -type "OK" -icon /images/error -title "Unapproved changes" -message $ret
+          # set ret -2
+        # }
       }
       if {$ret==0} {
         Ramzor red on

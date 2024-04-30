@@ -623,6 +623,16 @@ proc GetDbrName {} {
   Status "Please wait for retriving DBR's parameters"
   set barcode [set gaSet(entDUT) [string toupper $gaSet(entDUT)]] ; update
   
+  set ret [MainEcoCheck $barcode]
+  if {$ret!=0} {
+    $gaGui(startFrom) configure -text "" -values [list]
+    set gaSet(log.$gaSet(pair)) c:/logs/[clock format [clock seconds] -format  "%Y.%m.%d-%H.%M.%S"].txt
+    AddToPairLog $gaSet(pair) $ret
+    RLSound::Play information
+    DialogBoxRamzor -type "OK" -icon /images/error -title "Unapproved changes" -message $ret
+    return -2
+  }
+  
   if [file exists MarkNam_$barcode.txt] {
     file delete -force MarkNam_$barcode.txt
   }
@@ -1462,4 +1472,62 @@ proc DialogBoxRamzor {args}  {
   puts "DialogBoxRamzor ret after DialogBox:<$ret>"
   Ramzor green on
   return $ret
+}
+# ***************************************************************************
+# RetriveIdTraceData
+# ***************************************************************************
+proc RetriveIdTraceData {args} {
+  global gaSet
+  #set gaSet(fail) ""
+  puts "RetriveIdTraceData $args"
+  set barc [format %.11s [lindex $args 0]]
+  
+  set command [lindex $args 1]
+  switch -exact -- $command {
+    CSLByBarcode          {set barcode $barc  ; set traceabilityID null  ; set retPar "CSL"}
+    PCBTraceabilityIDData {set barcode null   ; set traceabilityID $barc ; set retPar "pcb"}
+    MKTItem4Barcode       {set barcode $barc  ; set traceabilityID null  ; set retPar "MKT Item"}
+    OperationItem4Barcode {set barcode $barc  ; set traceabilityID null  ; set retPar "item"}
+    default {set gaSet(fail) "Wrong command: \'$command\'"; return -1}
+  }
+  set url "https://ws-proxy01.rad.com:8445/ATE_WS/ws/rest/"
+  set param [set command]\?barcode=[set barcode]\&traceabilityID=[set traceabilityID]
+  append url $param
+  puts "url:<$url>"
+  if [catch {::http::geturl $url -headers [list Authorization "Basic [base64::encode webservices:radexternal]"]} tok] {
+    after 2000
+    if [catch {::http::geturl $url -headers [list Authorization "Basic [base64::encode webservices:radexternal]"]} tok] {
+       set gaSet(fail) "Fail to get $command for $barc"
+       return -1
+    }
+  }
+  
+  update
+  set st [::http::status $tok]
+  set nc [::http::ncode $tok]
+  if {$st=="ok" && $nc=="200"} {
+    #puts "Get $command from $barc done successfully"
+  } else {
+    set gaSet(fail) "http::status: <$st> http::ncode: <$nc>"; return -1
+  }
+  upvar #0 $tok state
+  #parray state
+  #puts "$state(body)"
+  set body $state(body)
+  ::http::cleanup $tok
+  
+  set asadict [::json::json2dict $body]
+  foreach {name whatis} $asadict {
+    foreach {par val} [lindex $whatis 0] {
+      puts "<$par> <$val>"
+      if {$val!="null"} {
+        dict set di $par $val
+      }  
+    }
+  }
+  if [info exist di] {
+    return $di ; #[dict get $di $retPar]
+  } else {
+    return -1
+  }
 }

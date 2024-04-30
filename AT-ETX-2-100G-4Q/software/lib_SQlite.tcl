@@ -69,9 +69,18 @@ proc SQliteAddLine {} {
   } else {
     set operator 0
   }
-
+  
+  if [info exists gaSet(1.traceId)] {
+    set traceID $gaSet(1.traceId) 
+  } else {
+    set traceID 0
+  }
+  
+  set poNumber 0
+  
   for {set tr 1} {$tr <= 6} {incr tr} {
-    if [catch {UpdateDB $barcode $uut $hostDescription $date $tim-$gaSet(ButRunTime) $status $failTestsList $failReason $operator} res] {
+    #if [catch {UpdateDB $barcode $uut $hostDescription $date $tim-$gaSet(ButRunTime) $status $failTestsList $failReason $operator} res] {}
+    if [catch {UpdateDB2 $barcode $uut $hostDescription $date $tim-$gaSet(ButRunTime) $status $failTestsList $failReason $operator $traceID $poNumber "" "" ""} res] {
       set res "Try${tr}_fail.$res"
       puts "[MyTime] Web DataBase is not updated. Try:<$tr>. Res:<$res>" ; update
       after [expr {int(rand()*3000+60)}] 
@@ -122,9 +131,10 @@ proc SQliteAddLine {} {
 # ***************************************************************************
 # AddLine
 # ***************************************************************************
-proc AddLine {} {
+proc AddLine {mode} {
   global gaSet
   set gaSet(radNet) 1
+  set gaSet(ButRunTime) 1234
   set barcode DE1005790454
   set gaSet(1.barcode1.IdMacLink) "noLink"
   set uut IlyaGinzburg
@@ -135,9 +145,21 @@ proc AddLine {} {
   set failReason sadas
   foreach {date tim} [split [clock format [clock seconds] -format "%Y.%m.%d %H.%M.%S"] " "] {break}
   set operator "ILYA GINZBURG"
+  if [info exists gaSet(1.traceId)] {
+    set traceID $gaSet(1.traceId) 
+  } else {
+    set traceID 123
+  }
+  
+  set poNumber 456
   
   for {set tr 1} {$tr <= 6} {incr tr} {
-    if [catch {UpdateDB $barcode $uut $hostDescription $date $tim $status $failTestsList $failReason $operator} res] {
+    if {$mode==1} {
+      set ca_ret [catch {UpdateDB $barcode $uut $hostDescription $date $tim $status $failTestsList $failReason $operator} res]
+    } else {
+      set ca_ret [catch {UpdateDB2 $barcode $uut $hostDescription $date $tim-$gaSet(ButRunTime) $status $failTestsList $failReason $operator $traceID $poNumber "Data1" "dAta2" "daTa3"} res] 
+    }
+    if {$ca_ret==1} { 
       set res "Try${tr}_fail.$res"
       puts "[MyTime] Web DataBase is not updated. Try:<$tr>. Res:<$res>" ; update
       after [expr {int(rand()*3000+60)}] 

@@ -15,37 +15,28 @@ proc MainEcoCheck {barcode} {
   set ret [DbFileExists]
   if {$ret!=0} {return $ret}
   
-  set res [Retrive_OperationItem4Barcode $barcode]
-  foreach {res_val res_txt} $res {}
-  puts "MainEcoCheck OperationItem4Barcode res_val:<$res_val> res_txt:<$res_txt>"
-  if {$res_val=="-1"} {
-    return $res_txt
+  set di [Retrive_OperationItem4Barcode $barcode]
+  puts "MainEcoCheck OperationItem4Barcode di:<$di>"
+  if {[dict get $di "ret"]=="-1"} {
+    return [dict get $di "fail"]
   } else {
-    set dbr_asmbl $res_txt
+    set dbr_asmbl_unit [dict get $di "item"]
   }
-  set res [Retrive_MktPdn $dbr_asmbl]
-  foreach {res_val res_txt} $res {}
-  puts "MainEcoCheck MktPdn res_val:<$res_val> res_txt:<$res_txt>"
-  if {$res_val=="-1"} {
-    return $res_txt
+  set di [Retrive_MktPdn $dbr_asmbl_unit]
+  puts "MainEcoCheck MktPdn di:<$di>"
+  if {[dict get $di "ret"]=="-1"} {
+    return [dict get $di "fail"]
   } else {
-    set mkt_pdn_num $res_txt
+    set mkt_pdn_num [dict get $di "MKT_PDN"]
   }
-  
-  puts ""
-  set lis [list]
-  foreach unit [list $dbr_asmbl $mkt_pdn_num] type {dbr pdn} {
-    set ret [CheckDB $unit]
-    puts "MainEcoCheck unit:<$unit> type:<$type> ret:<$ret>"
-    if {$ret!=0} {
-      foreach item $ret {
-        append lis  "$item, "
-      }
+  set unit $mkt_pdn_num
+  set ret [CheckDB $unit]
+  puts "\nMainEcoCheck unit:<$mkt_pdn_num> ret:<$ret>"
+
+  if {$ret!=0} {
+    foreach item $ret {
+      append lis  "$item, "
     }
-  }
-    
-  if {[llength $lis]!=0} {
-    set lis [lsort -unique $lis]
     set lis [string trimright $lis " ,"]
     if {[llength $lis]==1} {
       set verb "is an"
@@ -53,32 +44,11 @@ proc MainEcoCheck {barcode} {
       set verb "are"
     }
     # set txt "The following change/s for \'$unit\' $verb released:\n\n$lis\n\nConsult with your team Leader"
-    # set txt "There $verb unapproved ECO/NPI/NOI for the tested option:\n$lis\n
-    # The ATE is locked. Contact your Team Leader"
-    
-    # if {$type=="pdn"} {
-      # set unit "$mkt_pdn_num (DBR Assembly: $dbr_asmbl)"
-    # }
-    # set txt "Unapproved ECO/NPI/NOI:\n$barcode $unit:\n\n$lis\n
-    # The ATE is locked. Contact your Team Leader"
-    set txt "$barcode has unapproved ECO/NPI/NOI:\n$lis\n
+    set txt "There $verb unapproved ECO/NPI/NOI for the tested option:\n$lis\n
     The ATE is locked. Contact your Team Leader"
+    # tk_messageBox -message $txt -type ok -icon error -title "Unapproved changes"
     set ret $txt
-    
-    if ![file exists c:/logs] {
-      file mkdir c:/logs
-    }
-    set eco_log "c:/logs/[set barcode]_[clock format [clock seconds] -format %Y.%m.%d_%H.%M.%S]_ecoLog.txt"
-    if [catch {open $eco_log w+} id] {
-      # do nothing
-    } else {      
-      puts $id "ID Number: $barcode"
-      puts $id "DBR Name: $dbr_asmbl"
-      puts $id "Marketing Number: $mkt_pdn_num"
-      puts $id "\nUnapproved ECO: $lis"
-      close $id
-    }     
-  }
+  } 
    
   return $ret  
 }
@@ -118,6 +88,7 @@ proc Retrive_MktPdn {dbr_asmbl_unit} {
   #set url "http://webservices03:8080/ATE_WS/ws/rest/MKTPDNByBarcode?barcode=[set barc]"  
   
   set url "http://webservices03:8080/ATE_WS/ws/rest/MKTPDNByDBRAssembly?dbrAssembly=[set dbr_asmbl_unit]"
+  #puts "url:<$url>"
   return [Retrive_WS $url]
 } 
 # ***************************************************************************
@@ -130,6 +101,7 @@ proc Retrive_OperationItem4Barcode {barcode} {
   set url "https://ws-proxy01.rad.com:8445/ATE_WS/ws/rest/"
   set param OperationItem4Barcode\?barcode=[set barc]\&traceabilityID=null
   append url $param
+  #puts "url:<$url>"
   return [Retrive_WS $url]
 } 
 
@@ -137,15 +109,15 @@ proc Retrive_OperationItem4Barcode {barcode} {
 # Retrive_WS
 # ***************************************************************************
 proc Retrive_WS {url} {
-  puts "Retrive_WS $url"
-  set res_val 0
-  set res_txt [list]
+  puts "\nRetrive_WS $url"
+  dict set di ret 0
+  dict set di fail ""
   if [catch {::http::geturl $url -headers [list Authorization "Basic [base64::encode webservices:radexternal]"]} tok] {
     after 2000
     if [catch {::http::geturl $url -headers [list Authorization "Basic [base64::encode webservices:radexternal]"]} tok] {
-       set res_val -1
-       set res_txt "Fail to get OperationItem4Barcode for $barc"
-       return [list $res_val $res_txt]
+       dict set di fail "Fail to get OperationItem4Barcode for $barc"
+       dict set di ret -1
+       return $di
     }
   }
   
@@ -157,8 +129,9 @@ proc Retrive_WS {url} {
   if {$st=="ok" && $nc=="200"} {
     #puts "Get $command from $barc done successfully"
   } else {
-    set res_val -1
-    set res_txt "http::status: <$st> http::ncode: <$nc>"
+    dict set di ret -1
+    dict set di fail "http::status: <$st> http::ncode: <$nc>"
+    #set gaSet(fail) "http::status: <$st> http::ncode: <$nc>"; return -1
   }
   upvar #0 $tok state
   #parray state
@@ -166,18 +139,21 @@ proc Retrive_WS {url} {
   set body $state(body)
   ::http::cleanup $tok
   
-  if {$res_val==0} {
-    set asadict [::json::json2dict $body]
-    foreach {name whatis} $asadict {
-      foreach {par val} [lindex $whatis 0] {
-        puts "<$par> <$val>"
-        if {$val!="null"} {
-          lappend res_txt $val
-        }  
-      }
+  set asadict [::json::json2dict $body]
+  foreach {name whatis} $asadict {
+    foreach {par val} [lindex $whatis 0] {
+      puts "<$par> <$val>"
+      if {$val!="null"} {
+        dict set di $par $val
+      }  
     }
   }
-  return [list $res_val $res_txt]
+  # if [info exist di] {
+    # return $di ; #[dict get $di $retPar]
+  # } else {
+    # return -1
+  # }
+  return $di
 }
 
 

@@ -29,6 +29,36 @@ proc UpdateDB {barcode uutName hostDescription  date time status  failTestsList 
   ::http::cleanup $tok
 
 }
+# ***************************************************************************
+# UpdateDB2
+# ***************************************************************************
+proc UpdateDB2 {barcode uutName hostDescription  date time status  failTestsList failDescription dealtByServer traceID poNumber {data1 ""} {data2 ""} {data3 ""}} {
+  set dbPath "//prod-svm1/tds/Temp/SQLiteDB/"
+  set dbName "JerAteStats.db" 
+  foreach f {uutName hostDescription failTestsList failDescription dealtByServer data1 data2 data3} {
+    set url_$f [ConvertToUrl [set $f]]
+  }
+  puts "UpdateDB2 <$barcode> <$uutName> <$hostDescription> <$date> <$time> <$status> <$failTestsList> <$failDescription> \
+  <$dealtByServer> <$traceID> <$poNumber> <$data1> <$data2> <$data3>"
+  # set url "http://webservices-test:8080/ATE_WS/ws/tcc_rest/add_row2_with_db?barcode=$barcode&uutName=$url_uutName"
+  set url "http://webservices03.rad.com:10211/ATE_WS/ws/tcc_rest/add_row2_with_db?barcode=$barcode&uutName=$url_uutName"
+  append url "&hostDescription=$url_hostDescription&date=$date&time=$time&status=$status"
+  append url "&failTestsList=$url_failTestsList&failDescription=$url_failDescription&dealtByServer=$url_dealtByServer"
+  append url "&dbPath=$dbPath&dbName=$dbName&traceID=$traceID&poNumber=$poNumber&data1=$url_data1&data2=$url_data2&data3=$url_data3" 
+  #set url "http://webservices03.rad.com:10211/ATE_WS/ws/tcc_rest/add_row?barcode=$barcode&uutName=$url_uutName&hostDescription=$url_hostDescription&date=$date&time=$time&status=$status&failTestsList=$url_failTestsList&failDescription=$url_failDescription&dealtByServer=$url_dealtByServer"  
+  puts "UpdateDB url:<$url>"
+
+  set tok [::http::geturl $url -headers [list Authorization "Basic [base64::encode webservices:radexternal]"]]
+  update
+  if {[http::status $tok]=="ok" && [http::ncode $tok]=="200"} {
+    puts "Add line to DB successfully"
+  }
+  upvar #0 $tok state
+  #parray state
+  ::http::cleanup $tok
+
+}
+
 
 
 proc CopyToLocalDB {} {
