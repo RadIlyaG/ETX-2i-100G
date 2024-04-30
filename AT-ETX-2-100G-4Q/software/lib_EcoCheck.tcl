@@ -117,7 +117,10 @@ proc Retrive_MktPdn {dbr_asmbl_unit} {
   #set barc [format %.11s $barcode]
   #set url "http://webservices03:8080/ATE_WS/ws/rest/MKTPDNByBarcode?barcode=[set barc]"  
   
-  set url "http://webservices03:8080/ATE_WS/ws/rest/MKTPDNByDBRAssembly?dbrAssembly=[set dbr_asmbl_unit]"
+  #set url "http://webservices03:8080/ATE_WS/ws/rest/MKTPDNByDBRAssembly?dbrAssembly=[set dbr_asmbl_unit]"
+  set url "https://ws-proxy01.rad.com:8445/ATE_WS/ws/rest/"
+  set param MKTPDNByDBRAssembly?dbrAssembly=[set dbr_asmbl_unit]
+  append url $param
   return [Retrive_WS $url]
 } 
 # ***************************************************************************
