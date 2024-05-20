@@ -630,6 +630,7 @@ proc GetDbrName {} {
     AddToPairLog $gaSet(pair) $ret
     RLSound::Play information
     DialogBoxRamzor -type "OK" -icon /images/error -title "Unapproved changes" -message $ret
+    Status ""
     return -2
   }
   
