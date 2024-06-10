@@ -679,7 +679,12 @@ proc GetDbrName {} {
   #file mkdir [regsub -all / $res .]
   
   if {[file exists uutInits/$gaSet(DutInitName)]} {
-    source uutInits/$gaSet(DutInitName)  
+    source uutInits/$gaSet(DutInitName)
+    if {$gaSet(DefaultCF)=="" || $gaSet(DefaultCF)=="c:/aa"} {  
+      set ::chbUcf 0 ; ## for GuiInventory
+    } else {
+      set ::chbUcf 1
+    }    
     #UpdateAppsHelpText  
   } else {
     ## if the init file doesn't exist, fill the parameters by ? signs
@@ -695,6 +700,41 @@ proc GetDbrName {} {
   pack forget $gaGui(frFailStatus)
   #Status ""
   update
+  
+  set ::tmpLocalUCF [clock format [clock seconds] -format  "%Y.%m.%d-%H.%M.%S"]_${gaSet(DutInitName)}_$gaSet(pair).txt
+  set ret [GetUcFile $gaSet(DutFullName) $::tmpLocalUCF]
+  puts "BuildTests ret of GetUcFile  $gaSet(DutFullName) $gaSet(DutInitName): <$ret>"
+  if {$ret=="-1"} {
+    set gaSet(fail) "Get Default Configuration File Fail"
+    RLSound::Play fail
+    Status "Test FAIL"  red
+    DialogBoxRamzor -aspect 2000 -type Ok -message $gaSet(fail) -icon images/error -title "Get Default Configuration File Problem"
+    pack $gaGui(frFailStatus)  -anchor w
+    $gaSet(runTime) configure -text ""
+    return -1
+  }	else {
+    if {$gaSet(DefaultCF)!="" && $gaSet(DefaultCF)!="c:/aa"} {
+      if {$ret=="0"} {
+        set gaSet(fail) "No Default Configuration File at Agile"
+        Status "Test FAIL"  red
+        DialogBoxRamzor -aspect 2000 -type Ok -message $gaSet(fail) -icon images/error -title "Get Default Configuration File Problem"
+        pack $gaGui(frFailStatus)  -anchor w
+        $gaSet(runTime) configure -text ""
+        return -1
+      }
+    } elseif {$gaSet(DefaultCF)=="" || $gaSet(DefaultCF)=="c:/aa"} {  
+      if {$ret!="0"} {
+        set gaSet(fail) "Default Configuration File shouldn't be at Agile"
+        Status "Test FAIL"  red
+        DialogBoxRamzor -aspect 2000 -type Ok -message $gaSet(fail) -icon images/error -title "Get Default Configuration File Problem"
+        pack $gaGui(frFailStatus)  -anchor w
+        $gaSet(runTime) configure -text ""
+        return -1
+      }  
+    }
+  }
+  
+  
   BuildTests
   
   if ![string match *.PS.*  $gaSet(DutInitName)] {
@@ -1532,3 +1572,56 @@ proc RetriveIdTraceData {args} {
     return -1
   }
 }
+
+# ***************************************************************************
+# GetUcFile
+# ***************************************************************************
+proc GetUcFile {dbrName tmpLocalUCF} {
+  set ret 0
+  set res ""
+  set url "http://ws-proxy01.rad.com:10211/ATE_WS/ws/configDownload/ConfigFile?"
+  set param "dbrAssembly=[set dbrName]"
+  append url $param
+  puts "\nGetUcFile url:<$url>"
+  
+  if ![file exists c:/temp] {
+    file mkdir c:/temp
+    after 1000
+  }
+  set localUCF c:/temp/$tmpLocalUCF
+  if [file exists $localUCF] {
+    file delete -force $localUCF
+     after 1000
+  }
+  set f [open $localUCF w+]
+  if [catch {set tok [::http::geturl $url -channel $f -binary 1 -headers [list Authorization "Basic [base64::encode webservices:radexternal]"]]} res] {
+    close $f
+    return $res
+  } 
+  catch {close $f}
+  update
+  set st [::http::status $tok]
+  set nc [::http::ncode $tok]
+  if {$st=="ok" && $nc=="200"} {
+    #puts "Get $command from $barc done successfully"
+  } else {
+    puts "http::status: <$st> http::ncode: <$nc>"
+    set ret -1
+  }
+  upvar #0 $tok state
+  #parray state
+  #puts "body:<$state(body)>"
+  #set ret $state(body)
+  set ret $state(currentsize)
+  ::http::cleanup $tok
+  
+  if {$ret==0} {
+    if [catch {file size $localUCF} size] {
+      set ret -1
+    } else {
+      set ret $size
+    }
+  }
+  return $ret
+}
+

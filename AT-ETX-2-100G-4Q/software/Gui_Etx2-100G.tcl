@@ -781,7 +781,8 @@ proc GuiInventory {} {
   
   set txtWidth 37
   if {$gaSet(dutBox)=="19" || $gaSet(dutBox)=="Half19"} {
-    foreach indx {Boot SW 19 Half19 DGasp ExtClk 19SyncE Half19SyncE Aux1 Aux2 Default} {
+    ## fore .. Default
+    foreach indx {Boot SW 19 Half19 DGasp ExtClk 19SyncE Half19SyncE Aux1 Aux2} {
       if {$indx==$gaSet(dutBox) || $indx=="DGasp" || $indx=="ExtClk" || $indx=="${gaSet(dutBox)}SyncE" || $indx=="Aux1" || $indx=="Aux2" || $indx=="Boot" || $indx=="SW" || $indx=="Default"} {
         if {$p!="P" && ($indx=="ExtClk" || $indx=="${gaSet(dutBox)}SyncE" || $indx=="Aux1" || $indx=="Aux2")} {
           ## don't show files, reffered to PPT, in UUT without PPT 
@@ -801,6 +802,11 @@ proc GuiInventory {} {
         pack $fr  -fill x -pady 3
       }
     } 
+    
+    set fr  [frame $base.frUcf -bd 2 -relief groove]
+      set gaGui(chbUcf) [ttk::checkbutton $fr.chbUcf -text "User Default Configuration File" -variable ::chbUcf -command {ToggleUCF}]
+      pack $gaGui(chbUcf)  -pady 1 -padx 3 -anchor w 
+    pack $fr -fill x -pady 3
   }
   #pack [Separator $base.sep3 -orient horizontal] -fill x -padx 2 -pady 3
   
@@ -1495,5 +1501,17 @@ proc ToggleTestMode {} {
     DialogBox -title "Power OFF and ON" -type OK  -bg yellow -font {TkDefaultFont 11}\
       -message "Use the \'UUT's barcode\' entry to define the following:\n\n* Power OFF-ON cycles quantity\n* OFF duration in seconds (default=30)\n* StopOnFail (default=no)\n* ON duration in seconds (default=random)\n\n\
       For example: 100 25 yes random"  -justify left
+  }
+}
+# ***************************************************************************
+# ToggleUCF
+# ***************************************************************************
+proc ToggleUCF {} {
+  global gaTmpSet
+  puts "ToggleUCF ::chbUcf:<$::chbUcf>"
+  if {$::chbUcf && ($gaTmpSet(DefaultCF)=="" || $gaTmpSet(DefaultCF)=="c:/aa")} {  
+    set gaTmpSet(DefaultCF) "UserDefConf_exists"
+  } else {
+    set gaTmpSet(DefaultCF) ""
   }
 }

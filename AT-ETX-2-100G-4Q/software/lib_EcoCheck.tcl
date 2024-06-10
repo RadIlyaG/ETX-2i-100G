@@ -163,7 +163,7 @@ proc Retrive_WS {url paramName} {
     #puts "Get $command from $barc done successfully"
   } else {
     set res_val -1
-    set res_txt "http::status: <$st> http::ncode: <$nc>"
+    set res_txt  "Fail to get $paramName"; # "http::status: <$st> http::ncode: <$nc>"
   }
   upvar #0 $tok state
   #parray state

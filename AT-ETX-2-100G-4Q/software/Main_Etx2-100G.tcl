@@ -46,7 +46,7 @@ proc BuildTests {} {
         lappend lTestNames FinalSetToDefault 
       
         if {$gaSet(DefaultCF)!="" && $gaSet(DefaultCF)!="c:/aa"} {
-          lappend lTestNames LoadDefaultConfiguration
+          lappend lTestNames LoadDefaultConfiguration CheckUserDefaultFile
         }
         
         if $::repairMode {
@@ -784,4 +784,14 @@ proc FD_button {run} {
   if {$ret!=0} {return $ret}
   set ret [Login]
   return $ret
+}
+
+# ***************************************************************************
+# CheckUserDefaultFile
+# ***************************************************************************
+proc CheckUserDefaultFile {run} {
+  global gaSet 
+  Power all on
+  set ret [CheckUserDefaultFilePerf]
+  return $ret 
 }

@@ -452,6 +452,7 @@ proc DyingGaspPerf {psOffOn psOff} {
   #set framsL [wsplit $monData lIsT]
   set framsL [regexp -all -inline "Src: $dutIp.+?\\n\\n" $monData]
   if {[llength $framsL]==0} {
+    file delete -force $resFile
     set gaSet(fail) "No frame from $dutIp was detected"
     return -1
   }
@@ -494,6 +495,7 @@ proc DyingGaspPerf {psOffOn psOff} {
     set ret -1
     set gaSet(fail) "No \"DyingGasp\" trap was detected"
   }
+  file delete -force $resFile
   return $ret
   
 }
@@ -1037,6 +1039,37 @@ proc DateTime_Set {} {
 # ***************************************************************************
 proc LoadDefConf {} {
   global gaSet buffer 
+  
+  set res [Retrive_OperationItem4Barcode $gaSet(1.barcode1)]
+  foreach {res_val res_txt} $res {}
+  puts "LoadDefConf OperationItem4Barcode res_val:<$res_val> res_txt:<$res_txt>"
+  if {$res_val=="-1"} {
+    set gaSet(fail) $res_txt
+    return -1
+  } else {
+    set dbr_asmbl $res_txt
+  }
+  set initName [regsub -all / $dbr_asmbl .]
+  
+  set localUCF [clock format [clock seconds] -format  "%Y.%m.%d-%H.%M.%S"]_${initName}_$gaSet(pair).txt
+  set ret [GetUcFile $dbr_asmbl $localUCF]
+  puts "LoadDefConf ret of GetUcFile  $gaSet(1.barcode1): <$ret>"
+  if {$ret=="-1"} {
+    set gaSet(fail) "Get Default Configuration File Fail"
+    return -1
+  }
+  
+  set entDUTconfFile $::tmpLocalUCF
+  set entDUTconfFileSize [file size c:/temp/$entDUTconfFile]
+  
+  set localUCFSize [file size c:/temp/$localUCF]
+  
+  puts "\nDUT entry $entDUTconfFile:<$entDUTconfFileSize>,  LoadDefConf $localUCF:<$localUCFSize>"
+  if {$entDUTconfFileSize!=$localUCFSize} {
+    set gaSet(fail) "Problem with Default Configuration File's size ($entDUTconfFileSize != $localUCFSize)"
+    return -1
+  }
+  
   set ret [Login]
   if {$ret!=0} {
     #set ret [Login]
@@ -3157,6 +3190,7 @@ proc FecMode {fec} {
     set ret [Send $com "info d\r" "bridge-mode"]
     if {$ret!=0} {return $ret}
     set res [regexp {fec\s+(\w+)\s} $buffer ma val]
+    Send $com "\r\r" "eth($port)"
     if {$res==0} {
       set gaSet(fail) "Get FEC mode of Port $port fail"
       set ret -1
@@ -3171,3 +3205,40 @@ proc FecMode {fec} {
   }  
   return $ret
 }
+# ***************************************************************************
+# CheckUserDefaultFilePerf
+# ***************************************************************************
+proc CheckUserDefaultFilePerf {} {
+  global gaSet buffer
+  set com $gaSet(comDut)
+  Status "Check User Default File"
+  set ret [Login]
+  if {$ret!=0} {
+    #set ret [Login]
+    if {$ret!=0} {return $ret}
+  }
+  
+  Send $com "exit all\r" stam 0.25 
+  set ret [Send $com "file dir\r" more 5]
+  if {$ret == 0} {
+    set buff $buffer
+    Send $com "\r" more 5
+    append buff $buffer
+    Send $com "\r" $gaSet(prompt)
+    append buff $buffer
+    set buffer $buff
+  }
+  puts "\n CheckUserDefaultFilePerf buffer:<$buffer>"
+  if [string match {*user-default-config*} $buffer] {
+    set ret 0
+    set res [regexp {user-default-config[\sa-zA-Z]+(\d+)\s} $buffer ma val]
+    if $res {
+      AddToPairLog $gaSet(pair) "user-default-config: $val"
+    }
+  } else {
+    set ret -1
+    set gaSet(fail) "No \'user-default-config\' in File Dir"
+  }
+  return $ret
+}
+
