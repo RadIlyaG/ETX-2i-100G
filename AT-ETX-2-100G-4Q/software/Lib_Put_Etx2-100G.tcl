@@ -2130,9 +2130,11 @@ proc MeaGenerator_Start {} {
     set ret [Send $com "\r\r" FPGA]
     if {$ret!=0} {return $ret}
   }
-  set ret [Send $com "mea test port\r" FPGA]
+  set ret [Send $com "mea test port\r" "port>>"]
   if {$ret!=0} {return $ret}
-  set ret [Send $com "start 2 80000 800000\r" FPGA]
+  set ret [Send $com "clear\r" "port>>"]
+  if {$ret!=0} {return $ret}
+  set ret [Send $com "start 2 80000 800000\r" "port>>"]
   if {$ret!=0} {return $ret}
   
   return $ret
@@ -2178,7 +2180,7 @@ proc MeaGenerator_Check {} {
   
   set ret [Send $com "mea test port\r" FPGA]
   if {$ret!=0} {return $ret}
-  set ret [Send $com "stop 2\r" FPGA]
+  set ret [Send $com "stop 2\r" "port>>"]
   if {$ret!=0} {return $ret}
 #   set ret [Send $com "mea test port show\r" FPGA]
 #   if {$ret!=0} {return $ret}
