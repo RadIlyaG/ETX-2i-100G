@@ -2541,9 +2541,9 @@ proc PowerSupplyTestPerf {} {
       return -1
     }
     if {$psType eq "AC"} {
-      set models {FSF008-GS0G DPS-550AB-53 G1342-0550WRB} 
+      set models {FSF008-GS0G DPS-550AB-53 G1342-0550WRB G1342-0550WRC} 
     } elseif {$psType eq "DC"} {
-      set models {R1CD2551B-GS DPS-650AB-43 G1232-0550WRB}
+      set models {R1CD2551B-GS DPS-650AB-43 G1232-0550WRB G1232-0550WRC}
     }  
     
     puts "MFR_MODEL:<$val> models:<$models>"
