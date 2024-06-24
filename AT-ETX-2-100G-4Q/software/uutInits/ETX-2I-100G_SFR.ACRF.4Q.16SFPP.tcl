@@ -1,6 +1,6 @@
 set gaSet(sw)          "??"
-set gaSet(dbrSW)       "B1.20"
-set gaSet(swPack)      "SW3776"
+set gaSet(dbrSW)       ""
+set gaSet(swPack)      "SW3905"
 set gaSet(dbrBVerSw)   "SW3770"
 set gaSet(dbrBVer)     "B1.20"
 set gaSet(cpld)        "??"
