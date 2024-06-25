@@ -268,13 +268,22 @@ proc DataTransmission_FecOff  {run} {
   
   set ret [FecMode off]
   if {$ret!=0} {return $ret}
-  set ret [MeaGenerator_Start]
-  if {$ret!=0} {return $ret}
-  set ret [Wait "Data is running" 10 white]
-  if {$ret!=0} {return $ret}
-  set ret [MeaGenerator_Check]
-  if {$ret!=0} {return $ret}
   
+  for {set i 1} {$i<=4} {incr i} { 
+    puts "\n[MyTime] $i x 10sec"
+    set ret [MeaGenerator_Start]
+    if {$ret!=0} {return $ret}
+    set ret [Wait "Data is running" 10 white]
+    if {$ret!=0} {return $ret}
+    set ret [MeaGenerator_Check]
+    if {$ret!=0} {
+      after 2000
+    } else {
+      break
+    }
+  }
+  if {$ret!=0} {return $ret}
+    
   set ret [MeaGenerator_Start]
   if {$ret!=0} {return $ret}
   set ret [Wait "Data is running" 120 white]
@@ -291,13 +300,21 @@ proc DataTransmission_FecOn  {run} {
   global gaSet
   Power all on
   
-  set ret [FecMode off]
+  set ret [FecMode on]
   if {$ret!=0} {return $ret}
-  set ret [MeaGenerator_Start]
-  if {$ret!=0} {return $ret}
-  set ret [Wait "Data is running" 10 white]
-  if {$ret!=0} {return $ret}
-  set ret [MeaGenerator_Check]
+  for {set i 1} {$i<=4} {incr i} { 
+    puts "\n[MyTime] $i x 10sec"
+    set ret [MeaGenerator_Start]
+    if {$ret!=0} {return $ret}
+    set ret [Wait "Data is running" 10 white]
+    if {$ret!=0} {return $ret}
+    set ret [MeaGenerator_Check]
+    if {$ret!=0} {
+      after 2000
+    } else {
+      break
+    }
+  }
   if {$ret!=0} {return $ret}
   
   set ret [MeaGenerator_Start]
