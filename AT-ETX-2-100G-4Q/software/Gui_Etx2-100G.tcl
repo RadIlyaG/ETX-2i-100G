@@ -215,6 +215,14 @@ proc GUI {} {
         -takefocus 0 -command {GuiPower $gaSet(pair) 0} -bd 1 -helptext "Both PS OFF"]         
   pack $bb -side left  -anchor w -padx 7
   
+  set sepIntf [Separator $tb0.sepTr -orient vertical]
+  pack $sepIntf -side left -padx 6 -pady 2 -fill y -expand 0 
+  
+  set bb [ButtonBox $tb0.bbox4]
+    set gaGui(butAddTraceId) [$bb add -image [image create photo -file images/txt.ico] \
+        -takefocus 0 -command {GuiAddTraceId} -bd 1 -helptext "Add TraceId"]     
+  pack $bb -side left  -anchor w -padx 7
+  
       
 #     set frCommon [frame $mainframe.frCommon  -bd 2 -relief groove]
 #     pack $frCommon -fill both -expand 1 -padx 2 -pady 0 -side left 
