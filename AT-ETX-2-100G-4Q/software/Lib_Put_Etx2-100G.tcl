@@ -2034,8 +2034,13 @@ proc LedsTest_perf {} {
     set gaSet(fail) "LEDs Test fail"
     set ret -1
   }
-  catch {exec pskill.exe -t $pingId} ii
-  if {$ret!=0} {return $ret}
+  
+  # Use twapi instead pskill
+  # catch {exec pskill.exe -t $pingId} ii
+  # if {$ret!=0} {return $ret}
+  package require twapi
+  ::twapi::end_process $pingId -force
+  
   
   set txt "Remove SFPPs and QSFPs from all ports and verify that all the LINK leds are off"
   RLSound::Play information

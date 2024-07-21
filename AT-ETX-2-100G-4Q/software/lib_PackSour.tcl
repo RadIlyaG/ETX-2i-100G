@@ -138,6 +138,7 @@ package require ezsmtp
 package require http
 package require sqlite3
 package require RLAutoUpdate
+package require twapi
 
 source Gui_Etx2-100G.tcl
 source Main_Etx2-100G.tcl
