@@ -39,21 +39,33 @@ if 1 {
     }  
   }
   if {$gaSet(radNet)} {
-    set mTimeTds [file mtime //prod-svm1/tds/install/ateinstall/jate_team/autosyncapp/rlautosync.tcl]
-    set mTimeRL  [file mtime c:/tcl/lib/rl/rlautosync.tcl]
-    puts "mTimeTds:$mTimeTds mTimeRL:$mTimeRL"
-    if {$mTimeTds>$mTimeRL} {
-      puts "$mTimeTds>$mTimeRL"
-      file copy -force //prod-svm1/tds/install/ateinstall/jate_team/autosyncapp/rlautosync.tcl c:/tcl/lib/rl
-      after 2000
+    if 0 {
+      set mTimeTds [file mtime //prod-svm1/tds/install/ateinstall/jate_team/autosyncapp/rlautosync.tcl]
+      set mTimeRL  [file mtime c:/tcl/lib/rl/rlautosync.tcl]
+      puts "mTimeTds:$mTimeTds mTimeRL:$mTimeRL"
+      if {$mTimeTds>$mTimeRL} {
+        puts "$mTimeTds>$mTimeRL"
+        file copy -force //prod-svm1/tds/install/ateinstall/jate_team/autosyncapp/rlautosync.tcl c:/tcl/lib/rl
+        after 2000
+      }
+      set mTimeTds [file mtime //prod-svm1/tds/install/ateinstall/jate_team/autoupdate/rlautoupdate.tcl]
+      set mTimeRL  [file mtime c:/tcl/lib/rl/rlautoupdate.tcl]
+      puts "mTimeTds:$mTimeTds mTimeRL:$mTimeRL"
+      if {$mTimeTds>$mTimeRL} {
+        puts "$mTimeTds>$mTimeRL"
+        file copy -force //prod-svm1/tds/install/ateinstall/jate_team/autoupdate/rlautoupdate.tcl c:/tcl/lib/rl
+        after 2000
+      }
     }
-    set mTimeTds [file mtime //prod-svm1/tds/install/ateinstall/jate_team/autoupdate/rlautoupdate.tcl]
-    set mTimeRL  [file mtime c:/tcl/lib/rl/rlautoupdate.tcl]
-    puts "mTimeTds:$mTimeTds mTimeRL:$mTimeRL"
-    if {$mTimeTds>$mTimeRL} {
-      puts "$mTimeTds>$mTimeRL"
-      file copy -force //prod-svm1/tds/install/ateinstall/jate_team/autoupdate/rlautoupdate.tcl c:/tcl/lib/rl
-      after 2000
+    if 1 {
+      set mTimeTds [file mtime //prod-svm1/tds/install/ateinstall/jate_team/LibUrl_WS/LibUrl.tcl]
+      set mTimePwd  [file mtime [pwd]/LibUrl.tcl]
+      puts "mTimeTds:$mTimeTds mTimePwd:$mTimePwd"
+      if {$mTimeTds>$mTimePwd} {
+        puts "$mTimeTds>$mTimePwd"
+        file copy -force //prod-svm1/tds/install/ateinstall/jate_team/LibUrl_WS/LibUrl.tcl ./
+        after 2000
+      }
     }
     update
   }
