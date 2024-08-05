@@ -15,16 +15,21 @@ proc MainEcoCheck {barcode} {
   set ret [DbFileExists]
   if {$ret!=0} {return $ret}
   
-  set res [Retrive_OperationItem4Barcode $barcode]
-  foreach {res_val res_txt} $res {}
+  # set res [Retrive_OperationItem4Barcode $barcode]
+  # foreach {res_val res_txt} $res {}
+  # puts "MainEcoCheck OperationItem4Barcode res_val:<$res_val> res_txt:<$res_txt>"
+  foreach {res_val res_txt} [Get_OI4Barcode  $barcode] {}
   puts "MainEcoCheck OperationItem4Barcode res_val:<$res_val> res_txt:<$res_txt>"
   if {$res_val=="-1"} {
     return $res_txt
   } else {
     set dbr_asmbl $res_txt
   }
-  set res [Retrive_MktPdn $dbr_asmbl]
-  foreach {res_val res_txt} $res {}
+  
+  #set res [Retrive_MktPdn $dbr_asmbl]
+  #foreach {res_val res_txt} $res {}
+  #puts "MainEcoCheck MktPdn res_val:<$res_val> res_txt:<$res_txt>"  
+  foreach {res_val res_txt} [Get_MrktNumber  $dbr_asmbl] {}
   puts "MainEcoCheck MktPdn res_val:<$res_val> res_txt:<$res_txt>"
   if {$res_val=="-1"} {
     return $res_txt
@@ -112,7 +117,7 @@ proc CheckDB {unit} {
 # ***************************************************************************
 # Retrive_MktPdn
 # ***************************************************************************
-proc Retrive_MktPdn {dbr_asmbl_unit} {
+proc neRetrive_MktPdn {dbr_asmbl_unit} {
   puts "\nRetrive_MktPdn $dbr_asmbl_unit"
   #set barc [format %.11s $barcode]
   #set url "http://webservices03:8080/ATE_WS/ws/rest/MKTPDNByBarcode?barcode=[set barc]"  
@@ -127,7 +132,7 @@ proc Retrive_MktPdn {dbr_asmbl_unit} {
 # ***************************************************************************
 # Retrive_OperationItem4Barcode
 # ***************************************************************************
-proc Retrive_OperationItem4Barcode {barcode} {
+proc neRetrive_OperationItem4Barcode {barcode} {
   puts "\nRetrive_OperationItem4Barcode $barcode"
   set barc [format %.11s $barcode]
   
@@ -139,9 +144,9 @@ proc Retrive_OperationItem4Barcode {barcode} {
 } 
 
 # ***************************************************************************
-# Retrive_WS
+# neRetrive_WS
 # ***************************************************************************
-proc Retrive_WS {url paramName} {
+proc neRetrive_WS {url paramName} {
   puts "Retrive_WS $url $paramName"
   set res_val 0
   set res_txt [list]

@@ -1515,9 +1515,9 @@ proc DialogBoxRamzor {args}  {
   return $ret
 }
 # ***************************************************************************
-# RetriveIdTraceData
+# neRetriveIdTraceData
 # ***************************************************************************
-proc RetriveIdTraceData {args} {
+proc neRetriveIdTraceData {args} {
   global gaSet
   #set gaSet(fail) ""
   puts "RetriveIdTraceData $args"
