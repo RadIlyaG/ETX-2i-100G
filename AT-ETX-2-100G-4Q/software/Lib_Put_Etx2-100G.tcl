@@ -3233,7 +3233,7 @@ proc CheckUserDefaultFilePerf {} {
     set buff $buffer
     Send $com "\r" more 5
     append buff $buffer
-    Send $com "\r" $gaSet(prompt)
+    Send $com "\r" $gaSet(prmpt)
     append buff $buffer
     set buffer $buff
   }
