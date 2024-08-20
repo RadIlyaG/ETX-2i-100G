@@ -24,7 +24,7 @@ proc BuildTests {} {
       
       
       lappend lTestNames SetToDefault VoltageTest
-      lappend lTestNames SFP_ID ID 
+      lappend lTestNames SFP_Id ID 
     }
     
     if {$gaSet(rbTestMode)=="Full"} {
@@ -441,11 +441,15 @@ proc HotSwap {run} {
 }
 
 # ***************************************************************************
-# PS_ID
+# ID
 # ***************************************************************************
 proc ID {run} {
   global gaSet
   Power all on
+  if {[string match "*[lindex [info level 0] 0]*" $gaSet(startFrom)]} {
+    set ret [Wait "Wait fot SFPs ..." 90]
+    if {$ret!=0} {return $ret}
+  }
   set ret [PS_IDTest]
   return $ret
 }
@@ -461,9 +465,9 @@ proc DateTime {run} {
 } 
 
 # ***************************************************************************
-# SFP_ID
+# SFP_Id
 # ***************************************************************************
-proc SFP_ID {run} {
+proc SFP_Id {run} {
   global gaSet glSFPs 
   
   set glSFPs [list]
@@ -480,6 +484,10 @@ proc SFP_ID {run} {
     if {$ret!=0} {return $ret}
   }
   
+  if {[string match "*[lindex [info level 0] 0]*" $gaSet(startFrom)]} {
+    set ret [Wait "Wait fot SFPs ..." 90]
+    if {$ret!=0} {return $ret}
+  }
   if {$run=="on_off"} {
     set ret [Wait "Wait fot SFPs ..." 90]
     if {$ret!=0} {return $ret}
@@ -677,6 +685,11 @@ proc DyingGaspTest {run} {
 # PowerSupplyTest
 # ***************************************************************************
 proc PowerSupplyTest {run} {
+  global gaSet
+  if {[string match "*[lindex [info level 0] 0]*" $gaSet(startFrom)]} {
+    set ret [Wait "Wait fot SFPs ..." 90]
+    if {$ret!=0} {return $ret}
+  }
   set ret [PowerSupplyTestPerf]
   return $ret
 }
