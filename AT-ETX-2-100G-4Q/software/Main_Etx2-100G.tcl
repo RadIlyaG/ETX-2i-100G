@@ -761,7 +761,7 @@ proc On_Off {run} {
     if {$ret!=0} {return $ret} 
     Power all on
     ## 08:48 08/02/2024 set ret [Login]
-    set ret [SFP_ID on_off]
+    set ret [SFP_Id on_off]
     if {$ret=="-2"} {return $ret}
     if {$ret==0} {
       set res PASS
