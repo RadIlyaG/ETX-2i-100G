@@ -71,38 +71,45 @@ proc GetPageFile {barcode trac} {
   set gaSet(FileVer) 1   
   set gaSet(IdTyp) 2  
 
-  ## exec c:\\RADapps/Get28e01Data.exe  2\;DC1001403648\;1
-  ## c:\RADapps/Get28e01Data.exe  2;DC1001403648;1
-  #exec c:\\RADapps/Get28e01Data.exe  $gaSet(IdTyp)\;$barcode\;$gaSet(FileVer)
+  # ## exec c:\\RADapps/Get28e01Data.exe  2\;DC1001403648\;1
+  # ## c:\RADapps/Get28e01Data.exe  2;DC1001403648;1
+  # #exec c:\\RADapps/Get28e01Data.exe  $gaSet(IdTyp)\;$barcode\;$gaSet(FileVer)
   
-  if {$gaSet(1.useTraceId)==0} {
-    puts "$::RadAppsPath/Get28e01Data.exe  $gaSet(IdTyp)\;$barcode\;$gaSet(FileVer)\;"
-    exec $::RadAppsPath/Get28e01Data.exe  $gaSet(IdTyp)\;$barcode\;$gaSet(FileVer)\;
-  } else {
-    puts "$::RadAppsPath/Get28e01Data.exe  $gaSet(IdTyp)\;$barcode\;$gaSet(FileVer)\;$trac"
-    exec $::RadAppsPath/Get28e01Data.exe  $gaSet(IdTyp)\;$barcode\;$gaSet(FileVer)\;$trac
-  }
-  set fileName "$barcode.txt" 
-  Status "Wait for Pages 0-3 retrieval ..." ; update
+  # if {$gaSet(1.useTraceId)==0} {
+    # puts "$::RadAppsPath/Get28e01Data.exe  $gaSet(IdTyp)\;$barcode\;$gaSet(FileVer)\;"
+    # exec $::RadAppsPath/Get28e01Data.exe  $gaSet(IdTyp)\;$barcode\;$gaSet(FileVer)\;
+  # } else {
+    # puts "$::RadAppsPath/Get28e01Data.exe  $gaSet(IdTyp)\;$barcode\;$gaSet(FileVer)\;$trac"
+    # exec $::RadAppsPath/Get28e01Data.exe  $gaSet(IdTyp)\;$barcode\;$gaSet(FileVer)\;$trac
+  # }
+  # set fileName "$barcode.txt" 
+  # Status "Wait for Pages 0-3 retrieval ..." ; update
 
-	if {[file exists "$fileName"]==0} {
-	  set gaSet(fail) "Page file retrieval fail." ; update
-    puts stderr "Page file retrieval fail." 
+	# if {[file exists "$fileName"]==0} {
+	  # set gaSet(fail) "Page file retrieval fail." ; update
+    # puts stderr "Page file retrieval fail." 
+    # return -1
+	# }  
+  
+  # set fileId [open "$fileName"]
+  # seek $fileId 0
+  # set res [read $fileId]    
+  # close $fileId
+  
+  # ##file delete -force $fileName 
+  
+  foreach {ret resTxt} [::RLWS::Get_Pages $barcode $trac 1 ] {}
+  if {$ret!=0} {
+    set gaSet(fail) $resTxt
+    puts stderr $resTxt 
     return -1
-	}  
-  
-  set fileId [open "$fileName"]
-  seek $fileId 0
-  set res [read $fileId]    
-  close $fileId
-  
-  ##file delete -force $fileName 
+  }
   
 
   #Page0
-  set ret [regexp {Page 0 - ([\w ]+)} $res var gaGet(page0)]  
+  set ret [regexp {Page 0 - ([\w ]+)} $resTxt var gaGet(page0)]  
   if {$ret!=1} {
-  	set res [regsub -all \[\-\!\r\n\]+ $res ""]
+  	set res [regsub -all \[\-\!\r\n\]+ $resTxt ""]
     set txt "Get Page0 fail - $res"
   	set gaSet(fail) $txt ; update
     puts stderr $txt 
@@ -110,20 +117,19 @@ proc GetPageFile {barcode trac} {
   }
   set gaGet(page0) [string trim $gaGet(page0)]
   #Page1
-  set ret [regexp {Page 1 - ([\w ]+)} $res var gaGet(page1)]  
+  set ret [regexp {Page 1 - ([\w ]+)} $resTxt var gaGet(page1)]  
   if {$ret!=1} {
-  	set res [regsub -all \[\-\!\r\n\]+ $res ""]
+  	set res [regsub -all \[\-\!\r\n\]+ $resTxt ""]
     set txt "Get Page1 fail - $res"
   	set gaSet(fail) $txt ; update
     puts stderr $txt
     return -1
-    return -1
   }
   set gaGet(page1) [string trim $gaGet(page1)]  
   #Page2
-  set ret [regexp {Page 2 - ([\w ]+)} $res var gaGet(page2)]  
+  set ret [regexp {Page 2 - ([\w ]+)} $resTxt var gaGet(page2)]  
   if {$ret!=1} {
-  	set res [regsub -all \[\-\!\r\n\]+ $res ""]
+  	set res [regsub -all \[\-\!\r\n\]+ $resTxt ""]
     set txt "Get Page2 fail - $res"
   	set gaSet(fail) $txt ; update
     puts stderr $txt
@@ -131,9 +137,9 @@ proc GetPageFile {barcode trac} {
   }
   set gaGet(page2) [string trim $gaGet(page2)]  
   #Page3
-  set ret [regexp {Page 3 - ([\w ]+)} $res var gaGet(page3)]  
+  set ret [regexp {Page 3 - ([\w ]+)} $resTxt var gaGet(page3)]  
   if {$ret!=1} {
-  	set res [regsub -all \[\-\!\r\n\]+ $res ""]
+  	set res [regsub -all \[\-\!\r\n\]+ $resTxt ""]
     set txt "Get Page3 fail - $res"
   	set gaSet(fail) $txt ; update
     puts stderr $txt
@@ -152,8 +158,8 @@ proc GetPageFile {barcode trac} {
 ###   set gaGet(IdNum.p3.02_13) [lrange $gaGet(page3) 2 13]
 ###   set gaGet(MacQuantity.p3.14) [lrange $gaGet(page3) 14 14]
 ###   set gaGet(1stMac.p3.15_20) [lrange $gaGet(page3) 15 20]
-  file delete -force $fileName
-  puts $res
+  # file delete -force $fileName
+  puts $resTxt
   parray gaGet  
     
   return 0

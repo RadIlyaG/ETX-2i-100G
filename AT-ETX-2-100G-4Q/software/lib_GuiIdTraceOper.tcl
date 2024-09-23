@@ -95,7 +95,7 @@ proc AddLineIdTraceOper {barcode traceid operator} {
   foreach {date tim} [split [clock format [clock seconds] -format "%Y.%m.%d %H:%M:%S"] " "] {break}
   set date "2024.06.30"
   for {set tr 1} {$tr <= 6} {incr tr} {
-    if [catch {UpdateDB2 $barcode "" $gaSet(hostDescription) $date $tim Info traceid "" $operator $traceid "" "" "" ""} res] {
+    if [catch {::RLWS::UpdateDB2 $barcode "" $gaSet(hostDescription) $date $tim Info traceid "" $operator $traceid "" "" "" ""} res] {
       set res "Try${tr}_fail.$res"
       puts "Web DataBase is not updated. Try:<$tr>. Res:<$res>" ; update
       after [expr {int(rand()*3000+60)}] 

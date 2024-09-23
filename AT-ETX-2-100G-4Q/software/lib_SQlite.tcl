@@ -37,6 +37,8 @@ proc SQliteClose {} {
 # ***************************************************************************
 proc SQliteAddLine {} {
   global gaSet
+  if $::repairMode {return 0}
+  
   if !$::AtpExist {return 0}
   set barcode $gaSet(1.barcode1)
   if {[string match *skip* $barcode]} {
@@ -70,17 +72,23 @@ proc SQliteAddLine {} {
     set operator 0
   }
   
-  if [info exists gaSet(1.traceId)] {
-    set traceID $gaSet(1.traceId) 
+  if ![info exists gaSet(1.traceId)] {set gaSet(1.traceId) ""}
+  if {$gaSet(1.traceId)==""} {
+    set poNumber ""
+    set traceID ""
   } else {
-    set traceID 0
+    set traceID $gaSet(1.traceId)
+    foreach {ret resTxt} [::RLWS::Get_PcbTraceIdData $gaSet(1.traceId) {"po number"}] {}
+    if {$ret!="0"} {
+      set poNumber ""
+    } else {
+      set poNumber $resTxt
+    }
   }
-  
-  set poNumber 0
   
   for {set tr 1} {$tr <= 6} {incr tr} {
     #if [catch {UpdateDB $barcode $uut $hostDescription $date $tim-$gaSet(ButRunTime) $status $failTestsList $failReason $operator} res] {}
-    if [catch {UpdateDB2 $barcode $uut $hostDescription $date $tim-$gaSet(ButRunTime) $status $failTestsList $failReason $operator $traceID $poNumber "" "" ""} res] {
+    if [catch {::RLWS::UpdateDB2 $barcode $uut $hostDescription $date $tim-$gaSet(ButRunTime) $status $failTestsList $failReason $operator $traceID $poNumber "" "" ""} res] {
       set res "Try${tr}_fail.$res"
       puts "[MyTime] Web DataBase is not updated. Try:<$tr>. Res:<$res>" ; update
       after [expr {int(rand()*3000+60)}] 
