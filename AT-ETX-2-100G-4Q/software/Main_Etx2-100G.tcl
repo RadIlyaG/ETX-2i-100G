@@ -170,6 +170,15 @@ proc Testing {} {
       break
     }
   }
+  
+  if {$ret == 0 && [string match *.NULL.* $gaSet(DutInitName)} {
+    Power all off
+    RLSound::Play information
+    set txt "Remove PS-1 and PS-2"
+    set res [DialogBoxRamzor -type "OK" -icon /images/info -title "No PS option" \
+          -message $txt -bg yellow -font {TkDefaultFont 11}]
+    update
+  }
 
   AddToPairLog $gaSet(pair) "WS: $::wastedSecs"
   
