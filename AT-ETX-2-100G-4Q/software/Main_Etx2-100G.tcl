@@ -171,7 +171,7 @@ proc Testing {} {
     }
   }
   
-  if {$ret == 0 && [string match *.NULL.* $gaSet(DutInitName)} {
+  if {$ret == 0 && [string match *.NULL.* $gaSet(DutInitName)]} {
     Power all off
     RLSound::Play information
     set txt "Remove PS-1 and PS-2"
