@@ -2130,7 +2130,12 @@ proc MeaGenerator_Start {} {
   set gaSet(fail) "Logon fail"
   set ret [LogonDebug $com]
   
-  Wait "Wait for up" 60 white
+  if $::uutIsPs {
+    set w 5
+  } else {
+    set w 60
+  }  
+  Wait "Wait for up" $w white
   
   set ret [Send $com "debug mea\r\r" FPGA]
   if {$ret!=0} {
@@ -2163,6 +2168,7 @@ proc MeaGenerator_Check {} {
   set ret [LogonDebug $com]
   
   set ret [Send $com "debug mea\r\r" FPGA]
+  set ret [Send $com "\r\r" FPGA]
   #if {$ret!=0} {return $ret}
   #set ret [Send $com "mea test port\r" FPGA]
   #if {$ret!=0} {return $ret}
@@ -2549,10 +2555,13 @@ proc PowerSupplyTestPerf {} {
       return -1
     }
     if {$psType eq "AC"} {
-      set models {FSF008-GS0G DPS-550AB-53 G1342-0550WRB G1342-0550WRC} 
+      #set models {FSF008-GS0G DPS-550AB-53 G1342-0550WRB G1342-0550WRC} 
+      set models $::models_AC
     } elseif {$psType eq "DC"} {
-      set models {R1CD2551B-GS DPS-650AB-43 G1232-0550WRB G1232-0550WRC}
+      #set models {R1CD2551B-GS DPS-650AB-43 G1232-0550WRB G1232-0550WRC}
+      set models $::models_DC
     }  
+    
     
     puts "MFR_MODEL:<$val> models:<$models>"
     #if {$model ne $val} {}
@@ -3252,3 +3261,42 @@ proc CheckUserDefaultFilePerf {} {
   return $ret
 }
 
+# ***************************************************************************
+# VendorSerialIDPerf
+# ***************************************************************************
+proc VendorSerialIDPerf {} {
+  global gaSet buffer
+  set com $gaSet(comDut)
+  Status "Vendor Serial to ID"
+  set ret [Login]
+  if {$ret!=0} {
+    #set ret [Login]
+    if {$ret!=0} {return $ret}
+  }
+  
+  set invPs1 4006
+  set ps 1
+  set inv [set invPs${ps}]
+  puts "ps-$ps inv-$inv"
+ 
+  set ret [Send $com "exit all\r" ETX-2]
+  if {$ret!=0} {set gaSet(fail) "Can't reach ETX-2"; return $ret}
+  set ret [Send $com "configure system\r" ">system"]
+  if {$ret!=0} {set gaSet(fail) "Can't reach >system"; return $ret}
+  set ret [Send $com "inventory $inv\r" ($inv)]
+  if {$ret!=0} {set gaSet(fail) "read inventory $inv fail"; return $ret}
+  set ret [Send $com "show status\r" ($inv)]
+  if {$ret!=0} {set gaSet(fail) "show status fail"; return $ret}
+  set res [regexp {Serial Number[\s:]+([a-zA-Z\d]+)\s} $buffer ma val]
+  if {$res==0} {
+    set gaSet(fail) "Fail to get Serial Number of PS-$ps ($inv)"
+    return -1
+  }
+  AddToPairLog $gaSet(pair) "PS-$ps Serial Number: $val"  
+  
+  set barcode $gaSet(1.barcode1) 
+  foreach {ret resTxt} [::RLWS::Update_DigitalSerialNumber $barcode $val] {}
+  puts "VendorSerialIDPerf $barcode $val : <$ret> resTxt:<$resTxt>"
+  
+  return $ret
+}

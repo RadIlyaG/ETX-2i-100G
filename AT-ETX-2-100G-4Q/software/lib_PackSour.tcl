@@ -178,6 +178,8 @@ source Lib_Ramzor.tcl
 source lib_EcoCheck.tcl
 source lib_GuiIdTraceOper.tcl
 
+source lib_PS_Etx2-100G.tcl
+
 DeleteOldApp
 DeleteOldUserDef
 foreach fi [glob -nocomplain -type f *.txt] {
@@ -213,12 +215,15 @@ if {![info exists gaSet(rbTestMode)]} {
 
 set ::loginLoopsQty 64
 
+set ::models_AC {FSF008-GS0G  DPS-550AB-53 G1342-0550WRB G1342-0550WRC} 
+set ::models_DC {R1CD2551B-GS DPS-650AB-43 G1232-0550WRB G1232-0550WRC}
+
 GUI
-BuildTests
+#BuildTests
 update
 
 wm deiconify .
 wm geometry . $gaGui(xy)
 update
 Status "Ready"
-ToggleTestMode
+#ToggleTestMode

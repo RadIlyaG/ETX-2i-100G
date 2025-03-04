@@ -387,6 +387,15 @@ proc ButRun {} {
   
   set gRelayState red
   IPRelay-LoopRed
+  if {$ret==0 && $::uutIsPs==1} {
+    RLSound::Play information
+    set txt "For PS Tests use a Reference Chassis with ATT SW and Reference PS-2"
+    set res [DialogBox -icon images/info -type "Continue Abort" -text $txt -default 0 -aspect 2000 -title "ETX-2i-10G"]
+    if {$res=="Abort"} {
+      set ret -2
+    }
+  } 
+  
   if {$ret==0} {
     if {$gaSet(rbTestMode) eq "On_Off"} {
       set ret 0
@@ -430,14 +439,28 @@ proc ButRun {} {
 #       set gaSet(1.barcode1) "skipped" 
     }
   
-    if {![file exists uutInits/$gaSet(DutInitName)]} {
-      set txt "Init file for \'$gaSet(DutFullName)\' is absent"
-      Status  $txt
-      set gaSet(fail) $txt
-      set gaSet(curTest) $gaSet(startFrom)
-      set ret -1
-      AddToPairLog $gaSet(pair) $gaSet(fail)
+     
+    if $::uutIsPs {
+      ## for PS no need init
+    } else {        
+      if {![file exists uutInits/$gaSet(DutInitName)]} {
+        set txt "Init file for \'$gaSet(DutFullName)\' is absent"
+        Status  $txt
+        set gaSet(fail) $txt
+        set gaSet(curTest) $gaSet(startFrom)
+        set ret -1
+        AddToPairLog $gaSet(pair) $gaSet(fail)
+      }
     }
+    
+    if {$ret==0 && $::uutIsPs==1} {
+      RLSound::Play information
+      set txt "Verify you insert the UUT and connect the Power Cord"
+      set res [DialogBox -icon images/info -type "Continue Abort" -text $txt -default 0 -aspect 2000 -title "ETX-2i-10G"]
+      if {$res=="Abort"} {
+        set ret -2
+      }
+    } 
     
     if {$ret==0} {
       if {$gaSet(rbTestMode) eq "On_Off"} {
@@ -553,7 +576,9 @@ proc ButRun {} {
   if {$ret==0} {
     RLSound::Play pass
     Status "Done"  green
-    file rename -force $gaSet(log.$gaSet(pair)) [file rootname $gaSet(log.$gaSet(pair))]-Pass.txt
+    if {[info exists gaSet(log.$gaSet(pair))] && [file exists $gaSet(log.$gaSet(pair)) ]} {
+      file rename -force $gaSet(log.$gaSet(pair)) [file rootname $gaSet(log.$gaSet(pair))]-Pass.txt
+    }
 	  
     set gaSet(runStatus) Pass
 	  set gaSet(curTest) ""
@@ -583,8 +608,10 @@ proc ButRun {} {
 	  $gaSet(runTime) configure -text ""
 	  RLSound::Play fail
 	  Status "Test FAIL"  red
-	  file rename -force $gaSet(log.$gaSet(pair)) [file rootname $gaSet(log.$gaSet(pair))]-Fail.txt
-    set gaSet(log.$gaSet(pair))  [file rootname $gaSet(log.$gaSet(pair))]-Fail.txt   
+    if {[info exists gaSet(log.$gaSet(pair))] && [file exists $gaSet(log.$gaSet(pair)) ]} {
+      file rename -force $gaSet(log.$gaSet(pair)) [file rootname $gaSet(log.$gaSet(pair))]-Fail.txt
+      set gaSet(log.$gaSet(pair))  [file rootname $gaSet(log.$gaSet(pair))]-Fail.txt   
+    }
     ##27/11/2015 14:32:38   
 #     if {$gaSet(failAnd)=="stay"} {   
 #       set gaSet(startFrom) $gaSet(curTest)
@@ -595,9 +622,13 @@ proc ButRun {} {
     update
   }
   if {$gaSet(runStatus)!=""} {
-    SQliteAddLine
+    if {[info host]=="at-2-100g-2-w10" && $gaSet(pair)==2} {
+      ## Tester-2 GUI-2 = tikunim, don't reprt to TCC
+    } else {
+      SQliteAddLine
+    }
   }
-  SendEmail "ETX-2i-10G" [$gaSet(sstatus) cget -text]
+  SendEmail "ETX-2i-100G" [$gaSet(sstatus) cget -text]
   $gaGui(tbrun) configure -relief raised -state normal
   $gaGui(tbstop) configure -relief sunken -state disabled
   $gaGui(tbpaus) configure -relief sunken -state disabled

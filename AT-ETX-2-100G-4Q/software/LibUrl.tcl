@@ -5,7 +5,7 @@ package require json
 ::http::register https 8445 [list tls::socket -tls1 1]
 package require md5
 
-package provide RLWS 1.3
+package provide RLWS 1.4
 
 namespace eval RLWS { 
 
@@ -544,7 +544,7 @@ proc ::RLWS::_operateWS {url {query "NA"} paramName} {
     } else {
       foreach {name whatis} $asadict {
         foreach {par val} [lindex $whatis 0] {
-          # puts "<$par> <$val>"
+          #puts "<$par> <$val>"
           if {$val!="null"} {
             lappend res_txt $par $val
           }                 
@@ -1337,6 +1337,54 @@ proc ::RLWS::Update_SimID_LoraGW {id simId loraGw} {
   } else {
     return [list -1 $resTxt]
   }  
+}
+
+# ***************************************************************************
+# ::RLWS::Update_DigitalSerialNumber
+#  ::RLWS::Update_DigitalSerialNumber DF200041584 G1342551RB2205RONEN
+#  Returns list of two values - result and resultText
+#   result may be -1 if WS fails,
+#                  0 if OK
+#   ::RLWS::Update_DigitalSerialNumber DF200041584 G1342551RB2205RONEN will return
+#       0 ""
+#   ::RLWS::Update_DigitalSerialNumber ZF200041584 G1342551RB2205RONEN will return
+#       -1 "ID NUMBER NOT EXISTS"
+# ***************************************************************************
+proc ::RLWS::Update_DigitalSerialNumber {id serial} {
+  set procNameArgs [info level 0]
+  set procName [lindex $procNameArgs 0]
+  if $::RLWS::debugWS {puts "\n$procNameArgs"}
+  set barc [format %.11s $id]
+  
+  set url "$::RLWS:::HttpsURL/digital/"
+  set param UpdateDigitalSerialnumber\?barcode=[set barc]\&serial1=[set serial]
+  append url $param
+  set resLst [::RLWS::_operateWS $url "NA" "Update Digital Serial Number"]
+  foreach {res resTxt} $resLst {}
+  if {$res!=0} {
+    return $resLst 
+  }
+  if {[llength $resTxt] == 0} {
+    foreach {pa_ret pa_resTxt} [::RLWS::Ping_Services] {
+      if $::RLWS::debugWS {puts "pa_ret:<$pa_ret> <$pa_resTxt>"}
+    }
+    if {$pa_ret != 0} {
+      return [list $pa_ret $pa_resTxt]
+    } else {
+      return [list -1 "Fail to get Digital Serial Code"]
+    }
+  }
+    
+  set value [lindex $resTxt [expr {1 + [lsearch $resTxt "DigitalSerial"]} ] ]
+  if $::RLWS::debugWS {puts "res:<$res> value:<$value>"}
+  if {$value == "ID NUMBER NOT EXISTS"} {
+    return [list -1 "Fail to Update Digital Serial Number, $value"]
+  } 
+  if {$value==0} {
+    return [list 0 {}]
+  } else {
+    return [list -1 $value] 
+  }
 }
 
 # ***************************************************************************

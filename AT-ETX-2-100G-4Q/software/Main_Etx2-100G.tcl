@@ -10,7 +10,16 @@ proc BuildTests {} {
   }
   puts "\n[MyTime] BuildTests DutInitName:$gaSet(DutInitName)\n"
   
-  RetriveDutFam 
+  if ![info exist ::uutIsPs] {
+    set ::uutIsPs 0
+  }
+  puts "\n BuildTests ::uutIsPs:$::uutIsPs"
+  if $::uutIsPs {
+    PS_RetriveDutFam
+  } else {
+    RetriveDutFam
+  }
+  
   foreach {b r p d ps np up} [split $gaSet(dutFam) .] {}
   
   set glTests ""
@@ -18,29 +27,28 @@ proc BuildTests {} {
   if {$gaSet(rbTestMode) eq "On_Off"} {
     set lTests On_Off
   } else {
-    if ![string match *.PS.*  $gaSet(DutInitName)] {
+    if $::uutIsPs {
+      lappend lTestNames PS_ID
+      lappend lTestNames PS_DataTransmission
+      lappend lTestNames HotSwap
+      lappend lTestNames VendorSerial_ID
+    } elseif !$::uutIsPs {
       set lDownloadTests [list BootDownload Pages SetDownload SoftwareDownload]
       eval lappend lTestsAllTests $lDownloadTests
       
-      
       lappend lTestNames SetToDefault VoltageTest
       lappend lTestNames SFP_Id ID 
-    }
     
-    if {$gaSet(rbTestMode)=="Full"} {
-      lappend lTestNames PowerSupplyTest
     
-      if ![string match *.PS.*  $gaSet(DutInitName)] {
+      if {$gaSet(rbTestMode)=="Full"} {
+        lappend lTestNames PowerSupplyTest
         lappend lTestNames DyingGaspConf DyingGaspTest
       }
-    }
     
-    lappend lTestNames DataTransmission_Set DataTransmission_FecOff DataTransmission_FecOn
+      lappend lTestNames DataTransmission_Set DataTransmission_FecOff DataTransmission_FecOn
     
-    if {$gaSet(rbTestMode)=="Full"} {
-      lappend lTestNames HotSwap
-      
-      if ![string match *.PS.*  $gaSet(DutInitName)] {
+      if {$gaSet(rbTestMode)=="Full"} {
+        lappend lTestNames HotSwap        
         lappend lTestNames LedsTest ; # 28/04/2019 10:23:45 LedsTest1 LedsTest2
         ## 09:48 04/03/2024 lappend lTestNames FD_button
         lappend lTestNames FinalSetToDefault 
@@ -55,7 +63,7 @@ proc BuildTests {} {
           lappend lTestNames Mac_BarCode
         }
       }
-    }
+    }  
     
     eval lappend lTestsAllTests $lTestNames
     
@@ -249,6 +257,7 @@ proc FinalSetToDefault {run} {
   set ret [Wait "Wait for reset" 30 white]
   if {$ret!=0} {return $ret}
   
+    
   return $ret
 }
 # ***************************************************************************
@@ -263,7 +272,10 @@ proc DataTransmission_Set  {run} {
   set ret [Wait "Wait for reset" 30 white]
   if {$ret!=0} {return $ret}
   
+  
+  if !$::uutIsPs {}
   set ret [8SFPP_Config data]
+  
   return $ret
   
 }  
@@ -343,15 +355,26 @@ proc HotSwap {run} {
   global gaSet
   set ret [MeaGenerator_Start]
   if {$ret!=0} {return $ret}
-  
-  foreach ps {1 2} {
-    Power $ps off
-    
-    RLSound::Play information
-    set txt "Verify the following:\n\n\
+  if $::uutIsPs {
+    set PSs 1
+  } else {
+    set PSs {1 2}
+  }
+  foreach ps $PSs {
+    if $::uutIsPs {
+      set txt "Verify the following:\n\n\
+    On PS$ps the LED is ORANGE\n\
+    On Front Panel PWR LED is RED"
+    } else {
+      set txt "Verify the following:\n\n\
     On PS$ps the LED is ORANGE\n\
     On Front Panel PWR LED is RED\n\
     20 Data Ports LINK/ACT LEDs are Blinking Green"
+    }
+  
+    Power $ps off
+    
+    RLSound::Play information
     set res [DialogBoxRamzor -type "OK Fail" -icon /images/question -title "Hot Swap Test" -message $txt]
     update
     if {$res=="OK"} {
@@ -435,8 +458,7 @@ proc HotSwap {run} {
   #       AddToLog $gaSet(fail)
         return -1
       }
-    }
-    
+    }    
     
     if {$ret!=0} {break}
   }
@@ -832,5 +854,14 @@ proc CheckUserDefaultFile {run} {
   global gaSet 
   Power all on
   set ret [CheckUserDefaultFilePerf]
+  return $ret 
+}
+# ***************************************************************************
+# VendorSerial_ID
+# ***************************************************************************
+proc VendorSerial_ID {run} {
+global gaSet 
+  Power all on
+  set ret [VendorSerialIDPerf]
   return $ret 
 }

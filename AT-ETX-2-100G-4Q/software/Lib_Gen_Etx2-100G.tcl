@@ -620,8 +620,9 @@ proc mparray {a {pattern *}} {
 # ***************************************************************************
 proc GetDbrName {} {
   global gaSet gaGui
-  Status "Please wait for retriving DBR's parameters"
+  
   set barcode [set gaSet(entDUT) [string toupper $gaSet(entDUT)]] ; update
+  Status "Please wait for retriving DBR's parameters for $barcode"
   
   set ret [MainEcoCheck $barcode]
   if {$ret!=0} {
@@ -644,39 +645,6 @@ proc GetDbrName {} {
     set gaSet(fail) "Java application is missing"
     return -1
   }
-  # catch {exec $gaSet(javaLocation)\\java -jar $::RadAppsPath/OI4Barcode.jar $barcode} b
-  # set fileName MarkNam_$barcode.txt
-  # after 1000
-  # if ![file exists MarkNam_$barcode.txt] {
-    # set gaSet(fail) "File $fileName is not created. Verify the Barcode"
-    # #exec C:\\RLFiles\\Tools\\Btl\\failbeep.exe &
-    # RLSound::Play fail
-	  # Status "Test FAIL"  red
-    # DialogBox -aspect 2000 -type Ok -message $gaSet(fail) -icon images/error
-    # pack $gaGui(frFailStatus)  -anchor w
-	  # $gaSet(runTime) configure -text ""
-  	# return -1
-  # }
-  
-  # set fileId [open "$fileName"]
-    # seek $fileId 0
-    # set res [read $fileId]    
-  # close $fileId
-  
-  # #set txt "$barcode $res"
-  # set txt "[string trim $res]"
-  # #set gaSet(entDUT) $txt
-  # set gaSet(entDUT) ""
-  # puts "GetDbrName <$txt>"
-  
-  # set initName [regsub -all / $res .]
-  # puts "GetDbrName res:<$res>"
-  # puts "GetDbrName initName:<$initName>"
-  # set gaSet(DutFullName) $res
-  # set gaSet(DutInitName) $initName.tcl
-  
-  # file delete -force MarkNam_$barcode.txt
-  # #file mkdir [regsub -all / $res .]
   
   foreach {ret resTxt} [::RLWS::Get_OI4Barcode $barcode] {}
   if {$ret=="0"} {
@@ -693,13 +661,21 @@ proc GetDbrName {} {
   }
   set txt "[string trim $dbrName]"
   set gaSet(entDUT) ""
-  puts "GetDbrName <$txt>"
+  puts "GetDbrName <$txt>  $barcode"
   
   set initName [regsub -all / $dbrName .]
-  puts "GetDbrName dbrName:<$dbrName>"
+  puts "GetDbrName dbrName:<$dbrName>  $barcode"
   puts "GetDbrName initName:<$initName>"
   set gaSet(DutFullName) $dbrName
   set gaSet(DutInitName) $initName.tcl
+  
+  if [string match {*.PS.*} $initName] {
+    set ::uutIsPs 1
+    RLStatus::Show -msg atp
+  } else {
+    set ::uutIsPs 0
+  }
+  puts "GetDbrName ::uutIsPs:<$::uutIsPs>"
   
   if {[file exists uutInits/$gaSet(DutInitName)]} {
     source uutInits/$gaSet(DutInitName)
@@ -724,45 +700,45 @@ proc GetDbrName {} {
   #Status ""
   update
   
-  #set ::tmpLocalUCF [clock format [clock seconds] -format  "%Y.%m.%d-%H.%M.%S"]_${gaSet(DutInitName)}_$gaSet(pair).txt
-  set ::tmpLocalUCF c:/temp/[clock format [clock seconds] -format  "%Y.%m.%d-%H.%M.%S"]_${gaSet(DutInitName)}_$gaSet(pair).txt
-  foreach {ret resTxt} [::RLWS::Get_ConfigurationFile  $gaSet(DutFullName) $::tmpLocalUCF] {}
-  puts "BuildTests ret of GetUcFile  $gaSet(DutFullName) $gaSet(DutInitName): <$ret> resTxt:<$resTxt>"
-  if {$ret=="-1"} {
-    #set gaSet(fail) "Get Default Configuration File Fail"
-    set gaSet(fail) $resTxt
-    RLSound::Play fail
-    Status "Test FAIL"  red
-    DialogBoxRamzor -aspect 2000 -type Ok -message $gaSet(fail) -icon images/error -title "Get Default Configuration File Problem"
-    pack $gaGui(frFailStatus)  -anchor w
-    $gaSet(runTime) configure -text ""
-    return -1
-  }	else {
-    if {$gaSet(DefaultCF)!="" && $gaSet(DefaultCF)!="c:/aa"} {
-      if {$resTxt=="0"} {
-        set gaSet(fail) "No Default Configuration File at Agile"
-        Status "Test FAIL"  red
-        DialogBoxRamzor -aspect 2000 -type Ok -message $gaSet(fail) -icon images/error -title "Get Default Configuration File Problem"
-        pack $gaGui(frFailStatus)  -anchor w
-        $gaSet(runTime) configure -text ""
-        return -1
+  if !$::uutIsPs {
+    set ::tmpLocalUCF c:/temp/[clock format [clock seconds] -format  "%Y.%m.%d-%H.%M.%S"]_${gaSet(DutInitName)}_$gaSet(pair).txt
+    foreach {ret resTxt} [::RLWS::Get_ConfigurationFile  $gaSet(DutFullName) $::tmpLocalUCF] {}
+    puts "BuildTests ret of GetUcFile  $gaSet(DutFullName) $gaSet(DutInitName): <$ret> resTxt:<$resTxt>"
+    if {$ret=="-1"} {
+      #set gaSet(fail) "Get Default Configuration File Fail"
+      set gaSet(fail) $resTxt
+      RLSound::Play fail
+      Status "Test FAIL"  red
+      DialogBoxRamzor -aspect 2000 -type Ok -message $gaSet(fail) -icon images/error -title "Get Default Configuration File Problem"
+      pack $gaGui(frFailStatus)  -anchor w
+      $gaSet(runTime) configure -text ""
+      return -1
+    }	else {
+      if {$gaSet(DefaultCF)!="" && $gaSet(DefaultCF)!="c:/aa"} {
+        if {$resTxt=="0"} {
+          set gaSet(fail) "No Default Configuration File at Agile"
+          Status "Test FAIL"  red
+          DialogBoxRamzor -aspect 2000 -type Ok -message $gaSet(fail) -icon images/error -title "Get Default Configuration File Problem"
+          pack $gaGui(frFailStatus)  -anchor w
+          $gaSet(runTime) configure -text ""
+          return -1
+        }
+      } elseif {$gaSet(DefaultCF)=="" || $gaSet(DefaultCF)=="c:/aa"} {  
+        if {$resTxt!="0"} {
+          set gaSet(fail) "Default Configuration File shouldn't be at Agile"
+          Status "Test FAIL"  red
+          DialogBoxRamzor -aspect 2000 -type Ok -message $gaSet(fail) -icon images/error -title "Get Default Configuration File Problem"
+          pack $gaGui(frFailStatus)  -anchor w
+          $gaSet(runTime) configure -text ""
+          return -1
+        }  
       }
-    } elseif {$gaSet(DefaultCF)=="" || $gaSet(DefaultCF)=="c:/aa"} {  
-      if {$resTxt!="0"} {
-        set gaSet(fail) "Default Configuration File shouldn't be at Agile"
-        Status "Test FAIL"  red
-        DialogBoxRamzor -aspect 2000 -type Ok -message $gaSet(fail) -icon images/error -title "Get Default Configuration File Problem"
-        pack $gaGui(frFailStatus)  -anchor w
-        $gaSet(runTime) configure -text ""
-        return -1
-      }  
     }
   }
   
-  
   BuildTests
   
-  if ![string match *.PS.*  $gaSet(DutInitName)] {
+  if !$::uutIsPs {
     set ret [GetDbrSW $barcode]
     puts "GetDbrName ret of GetDbrSW:$ret" ; update
     if {$ret!=0} {
