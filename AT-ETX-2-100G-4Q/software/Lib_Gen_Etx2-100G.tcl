@@ -157,6 +157,8 @@ proc RetriveUsbChannel {} {
 # ***************************************************************************
 proc OpenPio {} {
   global gaSet descript
+  if {$::repairMode} {return 0}
+  
   set channel [RetriveUsbChannel]
   if {$channel=="-1"} {
     return -1
@@ -177,6 +179,8 @@ proc OpenPio {} {
 # ***************************************************************************
 proc ClosePio {} {
   global gaSet
+  if {$::repairMode} {return 0}
+  
   set ret 0
   foreach rb "1 2" {
 	  catch {RLUsbPio::Close $gaSet(idPwr$rb)}
@@ -475,6 +479,12 @@ proc Power {ps state} {
 #   RLSound::Play information
 #   DialogBox -type OK -message "Turn $ps $state"
 #   return 0
+
+  if {$::repairMode} {
+    set ret [Power_usb_relay $ps $state]
+    return $ret
+  }
+  
   set ret 0
   switch -exact -- $ps {
     1   {set pioL 1}
@@ -509,13 +519,18 @@ proc Power {ps state} {
 proc GuiPower {n state} { 
   global gaSet descript
   puts "\nGuiPower $n $state"
-  RLEH::Open
-  RLUsbPio::GetUsbChannels descript
   switch -exact -- $n {
     1.1 - 2.1 - 3.1 - 4.1 - 5.1 - SE.1 {set portL [list 1]}
     1.2 - 2.2 - 3.2 - 4.2 - 5.2 - SE.2 {set portL [list 2]}      
     1 - 2 - 3 - 4 - 5 - SE - all       {set portL [list 1 2]}  
   }        
+  if {$::repairMode} {
+    set ret [Power_usb_relay $ps $state]
+    return $ret
+  } 
+  
+  RLEH::Open
+  RLUsbPio::GetUsbChannels descript
   set channel [RetriveUsbChannel]
   if {$channel!="-1"} {
     foreach rb $portL {
@@ -1085,6 +1100,8 @@ proc GetDbrSW {barcode} {
 # ***************************************************************************
 proc GuiMuxMngIO {mngMode syncEmode} {
   global gaSet descript
+  if {$::repairMode} {return 0}
+  
   set channel [RetriveUsbChannel]   
   RLEH::Open
   set gaSet(idMuxMngIO) [RLUsbMmux::Open 1 $channel]
@@ -1098,6 +1115,8 @@ proc GuiMuxMngIO {mngMode syncEmode} {
 # ***************************************************************************
 proc MuxMngIO {mngMode syncEmode} {
   global gaSet
+  if {$::repairMode} {return 0}
+  
   puts "MuxMngIO $mngMode $syncEmode"
   RLUsbMmux::AllNC $gaSet(idMuxMngIO)
   after 1000
@@ -1642,5 +1661,43 @@ proc GetUcFile {dbrName tmpLocalUCF} {
     }
   }
   return $ret
+}
+
+# ***************************************************************************
+# Power
+# Power [all|1|2] [0|OFF|1|ON]
+# ***************************************************************************
+proc Power_usb_relay {ps state} {
+  global gaSet gaGui 
+  if {$state==1} {
+    set state ON
+  } elseif {$state==0} {
+    set state OFF
+  }  
+  puts "\n[MyTime] Power_usb_relay $ps $state"
+#   RLSound::Play information
+#   DialogBox -type OK -message "Turn $ps $state"
+#   return 0
+  set ret 0
+  switch -exact -- $ps {
+    1   {set rlyL 1}
+    2   {set rlyL 2}
+    all {set rlyL "ALL"}
+  } 
+  foreach rly $rlyL {
+    puts "Relay:$rly State:$state"
+    for {set try 1} {$try<=10} {incr try} {
+      if [catch {exec ./hidusb-relay-cmd.exe $state $rly} res] {
+        after 2000
+        set ret -1
+      }
+      puts "try:$try rly:$rly state:$state res:$res"; update
+      if {$res==""} {
+        set ret 0
+        break
+      }
+    }
+  }
+  return 0
 }
 

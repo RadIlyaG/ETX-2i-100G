@@ -14,6 +14,8 @@
 ## Relay without power default state: n.c --> com
 ######################################################
 proc Ramzor {color state {cmdLoc .}} {
+  if {$::repairMode} {return 0}
+  
   if {$color=="green"} {
     set li [list 1]
     set colLi "green"
