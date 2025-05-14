@@ -79,7 +79,7 @@ if 1 {
   
   
   if {$gaSet(radNet)} {
-    if {[string match *david-ya* [info host]] || [string match *ilya-g* [info host]]} {
+    if {$::repairMode  || [string match *ilya-g* [info host]]} {
       set emailL [list]
     } else {
       set emailL {{yehoshafat_r@rad.com} {} {}}

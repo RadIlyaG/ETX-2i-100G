@@ -520,9 +520,9 @@ proc GuiPower {n state} {
   global gaSet descript
   puts "\nGuiPower $n $state"
   switch -exact -- $n {
-    1.1 - 2.1 - 3.1 - 4.1 - 5.1 - SE.1 {set portL [list 1]}
-    1.2 - 2.2 - 3.2 - 4.2 - 5.2 - SE.2 {set portL [list 2]}      
-    1 - 2 - 3 - 4 - 5 - SE - all       {set portL [list 1 2]}  
+    1.1 - 2.1 - 3.1 - 4.1 - 5.1 - SE.1 {set portL [list 1]; set ps 1}
+    1.2 - 2.2 - 3.2 - 4.2 - 5.2 - SE.2 {set portL [list 2]; set ps 2}      
+    1 - 2 - 3 - 4 - 5 - SE - all       {set portL [list 1 2]; set ps all}  
   }        
   if {$::repairMode} {
     set ret [Power_usb_relay $ps $state]

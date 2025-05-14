@@ -1511,7 +1511,7 @@ proc GuiReadOperator {} {
   if !$::AtpExist {set gaSet(operator) 0; return 0}
   #set ret [GetOperator -i pause.gif -ti "title Get Operator" -te "text Operator's Name "]
   if {$::repairMode} {
-    set ret "David Yashar"
+    set ret "RepairMode"
   } else {
     set sn [clock seconds]
     set ret [GetOperator -i images/oper32.ico -gn $::RadAppsPath]
