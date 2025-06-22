@@ -703,6 +703,7 @@ proc Login {} {
     Send $gaSet(comDut) exit\r\r -2
     append gaSet(loginBuffer) "$buffer"
     puts "Login FPGA" ; update
+    set gaSet(prmpt) "2I"
   }
   if {[string match *:~$* $buffer] || [string match *login:* $buffer] || \
       [string match *Password:* $buffer]  || [string match *rad#* $buffer]} {
@@ -843,7 +844,7 @@ proc Login {} {
     set ret -1
     set gaSet(fail) $wasBootError
   }
-  puts "login lo:24 ret:<$ret>" ; update
+  puts "login lo:24 ret:<$ret> prompt:<$gaSet(prmpt)>" ; update
   $gaSet(runTime) configure -text ""
   if {$gaSet(act)==0} {return -2}
   Status $statusTxt
@@ -2346,6 +2347,8 @@ proc DyingGaspSetup {} {
     #set ret [Login]
     if {$ret!=0} {return $ret}
   }
+  set ret [Login]
+  if {$ret!=0} {return $ret}
   set gaSet(fail) "Logon fail"
   set com $gaSet(comDut)
   Send $com "exit all\r" stam 0.25 
@@ -2603,7 +2606,7 @@ proc VoltageTestPerf {} {
     if {$ret!=0} {return $ret}
   } 
   
-  set ret [Wait "Wait fot SFPs ..." 70]
+  set ret [Wait "Wait fot SFPs ..." 90] ; # 70
   if {$ret!=0} {return $ret}
   
   foreach {b r p d psType np up} [split $gaSet(dutFam) .] {}
