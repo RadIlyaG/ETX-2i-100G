@@ -5,7 +5,7 @@ package require json
 ::http::register https 8445 [list tls::socket -tls1 1]
 package require md5
 
-package provide RLWS 1.4
+package provide RLWS 1.7
 
 namespace eval RLWS { 
 
@@ -48,6 +48,9 @@ proc ::RLWS::UpdateDB {barcode uutName hostDescription  date time status  failTe
 proc ::RLWS::UpdateDB2 {barcode uutName hostDescription  date time status  failTestsList failDescription dealtByServer traceID poNumber {data1 ""} {data2 ""} {data3 ""}} {
   set dbPath "//prod-svm1/tds/Temp/SQLiteDB/"
   set dbName "JerAteStats.db" 
+  if {$data1==""} {
+    set data1 [info host]
+  }
   foreach f {uutName hostDescription failTestsList failDescription dealtByServer data1 data2 data3} {
     set url_$f [::RLWS::_convertToUrl [set $f]]
   }
@@ -59,15 +62,16 @@ proc ::RLWS::UpdateDB2 {barcode uutName hostDescription  date time status  failT
   append url "&dbPath=$dbPath&dbName=$dbName&traceID=$traceID&poNumber=$poNumber&data1=$url_data1&data2=$url_data2&data3=$url_data3" 
   if $::RLWS::debugWS {puts "UpdateDB url:<$url>"}
 
-  set tok [::http::geturl $url -headers [list Authorization "Basic [base64::encode webservices:radexternal]"]]
-  update
-  if {[http::status $tok]=="ok" && [http::ncode $tok]=="200"} {
-    if $::RLWS::debugWS {puts "Add line to DB successfully"}
-  }
-  upvar #0 $tok state
-  #parray state
-  ::http::cleanup $tok
-
+  # set tok [::http::geturl $url -headers [list Authorization "Basic [base64::encode webservices:radexternal]"]]
+  # update
+  # if {[http::status $tok]=="ok" && [http::ncode $tok]=="200"} {
+    # if $::RLWS::debugWS {puts "Add line to DB successfully"}
+  # }
+  # upvar #0 $tok state
+  # parray state
+  # ::http::cleanup $tok
+  set resLst [::RLWS::_operateWS $url NA "UpdateDB2"]
+  return $resLst
 }
 
 proc CopyToLocalDB {} {
@@ -90,7 +94,7 @@ proc CopyToLocalDB {} {
   upvar #0 $tok state
   #parray state
   ::http::cleanup $tok
-
+  
 }
 
 proc ::RLWS::_convertToUrl {s} {
@@ -129,7 +133,8 @@ proc ::RLWS::Get_SwVersions {id} {
   set procName [lindex $procNameArgs 0]
   if $::RLWS::debugWS {puts "\n$procNameArgs"}
   set barc [format %.11s $id]
-  set url "http://ws-proxy01.rad.com:8081/ExtAppsWS/Proxy/Select"
+  # 11:46 06/04/2025 set url "http://ws-proxy01.rad.com:8081/ExtAppsWS/Proxy/Select"
+  set url "http://ws-proxy01.rad.com:10211/ExtAppsWS/Proxy/Select"
   set query [::http::formatQuery queryName "qry.get.sw.for_idNumber_2" db inventory params $barc]
   append url "/?[set query]"
   set resLst [::RLWS::_operateWS $url $query "SW Version"]
@@ -451,7 +456,11 @@ proc ::RLWS::_operateWS {url {query "NA"} paramName} {
     append cmd " -query $query"
   }
   
-  #if $::RLWS::debugWS {puts "cmd:<$cmd>"}
+  if $::RLWS::debugWS {
+    puts "url:<$url>"
+    puts "headers:<$headers>"    
+    puts "cmd:<$cmd>"
+  }
   if [catch {eval $cmd} tok] {
     after 2000
     if [catch {eval $cmd} tok] {
@@ -505,12 +514,15 @@ proc ::RLWS::_operateWS {url {query "NA"} paramName} {
     if [string match {*ServerPing*} $url] {
       return [list 0 $body]
     }
-    if {$mode=="get_file" && $res_val==0} {
+    if [string match {*add_row2_with_db*} $url] {    
+      return [list 0 "Web TCC DataBase is updated successfully"]
+    }
+    if {$mode=="get_file" && $res_val==0} {    
       if [catch {file size $localUCF} size] {
         return [list "-1" "Fail to get size of UserConfigurationFile"] ; #$localUCF
       } else {
         if [catch {open $localUCF r} fid] {
-          return [list "-1" "Fail to read UserConfigurationFile"] ; #$localUCF
+         return [list "-1" "Fail to read UserConfigurationFile"] ; #$localUCF
         } else {
           set problem 0
           set ucf_content [read $fid]
@@ -1386,6 +1398,7 @@ proc ::RLWS::Update_DigitalSerialNumber {id serial} {
     return [list -1 $value] 
   }
 }
+ 
 
 # ***************************************************************************
 # MacReg (MACReg_2MAC_2IMEI.exe)
@@ -1889,86 +1902,48 @@ proc ::RLWS::_macExtantCheck {mac id_number} {
   return $ret
 }
 
-if 0 {
-  proc CheckMac {id mac} {
-    return [::RLWS::CheckMac id mac]
-  }
-  proc Get_OI4Barcode {id} {
-    return [::RLWS::Get_OI4Barcode $id]
-  }
-  proc Get_CSL {id} {
-    return [::RLWS::Get_CSL $id]
-  }
-  proc Get_MrktName {id} {
-    return [::RLWS::Get_MrktName $id]
-  }
-  proc Get_MrktNumber {dbr_assm} {
-    return [::RLWS::Get_MrktNumber $dbr_assm]
-  }
-  proc Disconnect_Barcode {id} {
-    return [::RLWS::Disconnect_Barcode $id]
-  }
-  proc Get_PcbTraceIdData {traceId data_list} {
-    return [::RLWS::Get_PcbTraceIdData $traceId $data_list]
-  }
-  proc Get_ConfigurationFile {dbr_assm localUCF} {
-    return [::RLWS::Get_ConfigurationFile $dbr_assm $localUCF]
-  }
-  proc MacServer {qty} {
-    return [::RLWS::MacServer $qty]
-  }
-  proc Get_Mac {qty} {
-    return [::RLWS::Get_Mac $qty]
-  }
-  proc Get_Pages {id trId macs_qty} { 
-    return [::RLWS::Get_Pages $id $trId $macs_qty]
-  }
-  proc Get_TraceId {id} {
-    return [::RLWS::Get_TraceId $id]
-  }
-  proc Get_SwVersions {id} {
-    return [::RLWS::Get_SwVersions $id]
-  }
-  proc UpdateDB2 {barcode uut hostDescription date tim status failTestsList failReason operator traceID poNumber data1 data2 data3} {
-    return [::RLWS::UpdateDB2 $barcode $uut $hostDescription $date $tim $status $failTestsList $failReason $operator $traceID $poNumber $data1 $data2 $data3]
-  }
-}
+
+  #proc UpdateDB2 {barcode uut hostDescription date tim status failTestsList failReason operator traceID poNumber data1 data2 data3} {
+  #  return [::RLWS::UpdateDB2 $barcode $uut $hostDescription $date $tim $status $failTestsList $failReason $operator $traceID $poNumber $data1 $data2 $data3]
+  #}
+
 
 
 puts "set ::RLWS::debugWS 1"
-if 0 {
-  puts "::RLWS::Get_File //prod-svm1/tds/Install/ATEinstall/bwidget1.8/ arrow.tcl c:/temp/arrow.tcl"
-  puts "::RLWS::CheckMac EA1004489579 112233445566"
-  puts "::RLWS::Get_PcbTraceIdData 21181408 {pcb product {po number}}"
-  puts "::RLWS::Get_MrktName EA1004489579"
-  puts "::RLWS::Get_MrktNumber ETX-1P/ACEX/1SFP1UTP/4UTP/W"
-  puts "::RLWS::Get_OI4Barcode EA1004489579"
-  puts "::RLWS::Get_SwVersions DC1002287083"
-  puts "::RLWS::Get_TraceId DA200047522"
-  puts "set ::RLWS::debugWS 1"
-  puts "::RLWS::MacReg 123456123456 EA1004489579"
-  puts "::RLWS::Get_ConfigurationFile ETX-2I-100G_FTR/DCRF/4Q/16SFPP/K10 c:/temp/1.txt"
-  puts "::RLWS::Ping_Network"
-  puts "::RLWS::Ping_Services"
-  puts "::RLWS::Get_Mac 1"
-
-
-  puts ""
-  puts "CheckMac EA1004489579 112233445566"
-  puts "Get_OI4Barcode EA1004489579"
-  puts "Get_CSL EA1004489579"
-  puts "Get_MrktName EA1004489579"
-  puts "Get_MrktNumber ETX-1P/ACEX/1SFP1UTP/4UTP/WF"
-  puts "Get_MrktNumber ETX-1P/ACEX/1SFP1UTP/4UTP"
-  puts "Disconnect_Barcode EA1004489579"
-  puts "Get_PcbTraceIdData 21181408 {pcb product {po number}}"
-  puts "Get_ConfigurationFile ETX-2I-100G_FTR/DCRF/4Q/16SFPP/K10 c:/temp/1.txt"
-  puts "MacServer 1"
-  puts "Get_Mac 1"
-  puts "Get_Pages IO3001960310 50190576 0"
-  puts "Get_TraceId EA1004489579"
-  puts "Get_TraceId DA200047522"
+proc ::RLWS::TestRLWS {} {
+  #set ::RLWS::debugWS 1
+  
+  set testList []
+  lappend testList [list ::RLWS::Ping_Services]
+  lappend testList [list ::RLWS::CheckMac EA1004489579 112233445566]
+  lappend testList [list ::RLWS::Get_ConfigurationFile ETX-2I-100G_FTR/DCRF/4Q/16SFPP/K10 c:/temp/1.txt]
+  lappend testList [list ::RLWS::Get_CSL EA1004489579]
+  lappend testList [list ::RLWS::Get_DigitalSerialCode DZ100078016]
+  lappend testList [list ::RLWS::Get_EmpName 114965]
+  lappend testList [list ::RLWS::Get_File //prod-svm1/tds/Install/ATEinstall/bwidget1.8/ arrow.tcl c:/temp/arrow.tcl]
+  lappend testList [list ::RLWS::Get_Mac 1]
+  lappend testList [list ::RLWS::Get_MrktName EA1004489579]
+  lappend testList [list ::RLWS::Get_MrktNumber ETX-2I-10G-B_ATT/19/DC/8SFPP]
+  lappend testList [list ::RLWS::Get_OI4Barcode EA1004489579]
+  lappend testList [list ::RLWS::Get_Pages IO3001960310 50190576 0]
+  lappend testList [list ::RLWS::Get_PcbTraceIdData 21181408 {pcb product {po number}}]
+  lappend testList [list ::RLWS::Get_SwVersions DC1002287083]
+  lappend testList [list ::RLWS::Get_TraceId DA200047522]
+  lappend testList [list ::RLWS::Get_Mac 0]
+  lappend testList [list ::RLWS::Update_DigitalSerialNumber DF200041584 G1342551RB2205RONEN]
+  lappend testList [list ::RLWS::Update_SimID_LoraGW EA1004489579 89011703274284322239 0016C001F1109216]
+  
   foreach {date tim} [split [clock format [clock seconds] -format "%Y.%m.%d %H:%M:%S"] " "] {break}
-  puts "UpdateDB2 EA1004489579 UutUut IlyaGinzburg $date $tim Pass FailTestsList FailReason {Ilya Ginzburg} TraceID PoNumber data1 data2 data3"
-  puts "Get_SwVersions DC1002287083"
+  lappend testList [list ::RLWS::UpdateDB2 EA1004489579 uut hostDescription $date $tim Pass "" "" "Ilya Ginzburg" 12345678 987654 [info host] data2 data3]
+  #::RLWS::MacReg 123456123456 EA1004489579
+ 
+  foreach tst $testList {
+    foreach {ret resTxt} [eval $tst] {}
+    set stam ""
+    if {$ret!=0} {
+      set stam "!!! "
+    }
+    puts "$stam [lindex $tst 0] ret:$ret resTxt:$resTxt"
+  }
+  
 }
