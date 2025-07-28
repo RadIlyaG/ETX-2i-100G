@@ -491,6 +491,11 @@ proc ID {run} {
     set ret [Wait "Wait fot SFPs ..." 90]
     if {$ret!=0} {return $ret}
   }
+  # if {[string match *100G_DT.* $gaSet(DutInitName)]} {
+    # set mode "DT"
+  # } else {
+    # set mode "normal"
+  # }  
   set ret [PS_IDTest "normal"]
   return $ret
 }
@@ -500,10 +505,10 @@ proc ID {run} {
 proc ID_DT {run} {
   global gaSet
   Power all on
-  if {[string match "*[lindex [info level 0] 0]*" $gaSet(startFrom)]} {
-    set ret [Wait "Wait fot SFPs ..." 90]
-    if {$ret!=0} {return $ret}
-  }
+  # if {[string match "*[lindex [info level 0] 0]*" $gaSet(startFrom)]} {
+    # set ret [Wait "Wait fot SFPs ..." 90]
+    # if {$ret!=0} {return $ret}
+  # }
   set ret [PS_IDTest "DT"]
   return $ret
 }
@@ -724,6 +729,10 @@ proc DyingGaspConf {run} {
   Power all on
  
   set ret [DyingGaspSetup]
+  if {$ret!=0} {return $ret}
+  
+  set ret [Login]
+  if {$ret!=0} {return $ret}
   return $ret
 }
 # ***************************************************************************

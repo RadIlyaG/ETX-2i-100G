@@ -156,25 +156,27 @@ proc PS_IDTest {mode} {
     }
   }
   
-  regexp {FAN Status[\s-]+(.+)\sSensor} $buffer ma fanSt
-  if ![info exists fanSt] {
-    set gaSet(fail) "Can't read FAN Status"
-    return -1
-  }
-  puts "fanSt:$fanSt"
-  if {$b=="19"} { 
-    if {$fanSt!="1 OK 2 OK 3 OK 4 OK"} {
-      set ret [Send $com "show environment\r" ">chassis"]
-      if {$ret!=0} {return $ret}
-      regexp {FAN Status[\s-]+(.+)\sSensor } $buffer ma fanSt
-      if ![info exists fanSt] {
-        set gaSet(fail) "Can't read FAN Status"
-        return -1
-      }
-      puts "fanSt:$fanSt"
+  if {$mode=="normal"} { 
+    regexp {FAN Status[\s-]+(.+)\sSensor} $buffer ma fanSt
+    if ![info exists fanSt] {
+      set gaSet(fail) "Can't read FAN Status"
+      return -1
+    }
+    puts "fanSt:$fanSt"
+    if {$b=="19"} { 
       if {$fanSt!="1 OK 2 OK 3 OK 4 OK"} {
-        set gaSet(fail) "FAN Status is \'$fanSt\'"
-        return -1
+        set ret [Send $com "show environment\r" ">chassis"]
+        if {$ret!=0} {return $ret}
+        regexp {FAN Status[\s-]+(.+)\sSensor } $buffer ma fanSt
+        if ![info exists fanSt] {
+          set gaSet(fail) "Can't read FAN Status"
+          return -1
+        }
+        puts "fanSt:$fanSt"
+        if {$fanSt!="1 OK 2 OK 3 OK 4 OK"} {
+          set gaSet(fail) "FAN Status is \'$fanSt\'"
+          return -1
+        }
       }
     }
   }
@@ -240,7 +242,10 @@ proc PS_IDTest {mode} {
     }
   }
   
-  if {$mode=="normal" || [string match *100G_DT.* $gaSet(DutInitName)] && $mode=="DT"} {  
+  ## check the SW if the UUT != DT or
+  ##              if UUT==DT and mode==DT
+  if {![string match *100G_DT.* $gaSet(DutInitName)] || \
+      ([string match *100G_DT.* $gaSet(DutInitName)] && $mode=="DT") } { 
     if {$sw!=$gaSet(dbrSW)} {
       set gaSet(fail) "SW is \"$sw\". Should be \"$gaSet(dbrSW)\""
       return -1

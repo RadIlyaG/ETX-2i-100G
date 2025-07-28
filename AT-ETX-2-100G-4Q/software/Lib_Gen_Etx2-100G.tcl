@@ -42,7 +42,7 @@ proc OpenRL {} {
   set gaSet(curTest) $curTest
   puts "[MyTime] ret:$ret ret1:$ret1 ret2:$ret2 " ; update
   if {$ret1!=0 || $ret2!=0} {
-    return -2
+    return -3
   }
   return 0
 }
