@@ -763,23 +763,23 @@ proc GuiInventory {} {
   array unset gaTmpSet
   
   if {![file exists uutInits/$gaSet(DutInitName)]} {
-    set parL [list sw licDir dbrSW swPack dbrBVerSw dbrBVer cpld]
+    set parL [list sw licDir dbrSW swPack dbrBVerSw dbrBVer cpld sw_forBist]
     foreach par $parL {
       set gaSet($par) ??
       set gaTmpSet($par) ??
     }
-    foreach indx {Boot SW DGasp ExtClk Default 19 Half19 19SyncE Half19SyncE Aux1 Aux2} { 
+    foreach indx {Boot SW DGasp ExtClk Default 19 Half19 19SyncE Half19SyncE Aux1 Aux2 SW_forBist} { 
       set gaSet([set indx]CF)  c:/aa
       set gaTmpSet([set indx]CF)  c:/aa
     }
   }
   
-  set parL [list sw licDir dbrSW swPack dbrBVerSw dbrBVer cpld]
+  set parL [list sw licDir dbrSW swPack dbrBVerSw dbrBVer cpld sw_forBist]
   foreach par $parL {
     if ![info exists gaSet($par)] {set gaSet($par) ??}
     set gaTmpSet($par) $gaSet($par)
   }
-  foreach indx {Boot SW DGasp ExtClk Default 19 Half19 19SyncE Half19SyncE Aux1 Aux2} { 
+  foreach indx {Boot SW DGasp ExtClk Default 19 Half19 19SyncE Half19SyncE Aux1 Aux2 SW_forBist} { 
     if ![info exists gaSet([set indx]CF)] {set gaSet([set indx]CF) c:/aa}
     set gaTmpSet([set indx]CF)  $gaSet([set indx]CF)
   }
@@ -820,15 +820,17 @@ proc GuiInventory {} {
   
   set txtWidth 37
   if {$gaSet(dutBox)=="19" || $gaSet(dutBox)=="Half19"} {
-    ## fore .. Default
-    foreach indx {Boot SW 19 Half19 DGasp ExtClk 19SyncE Half19SyncE Aux1 Aux2} {
-      if {$indx==$gaSet(dutBox) || $indx=="DGasp" || $indx=="ExtClk" || $indx=="${gaSet(dutBox)}SyncE" || $indx=="Aux1" || $indx=="Aux2" || $indx=="Boot" || $indx=="SW" || $indx=="Default"} {
+    ## for .. Default
+    #foreach indx {Boot SW 19 Half19 DGasp ExtClk 19SyncE Half19SyncE Aux1 Aux2 SW_forBist} {}
+    
+    foreach indx {Boot SW DGasp ExtClk 19SyncE Half19SyncE Aux1 Aux2 SW_forBist} {
+      if {$indx==$gaSet(dutBox) || $indx=="DGasp" || $indx=="ExtClk" || $indx=="${gaSet(dutBox)}SyncE" || $indx=="Aux1" || $indx=="Aux2" || $indx=="Boot" || $indx=="SW" || $indx=="Default" || $indx=="SW_forBist"}  {
         if {$p!="P" && ($indx=="ExtClk" || $indx=="${gaSet(dutBox)}SyncE" || $indx=="Aux1" || $indx=="Aux2")} {
           ## don't show files, reffered to PPT, in UUT without PPT 
           continue
         }         
         set fr [frame $base.fr$indx -bd 0 -relief groove]
-          if {$indx=="Boot" || $indx=="SW"} {
+          if {$indx=="Boot" || $indx=="SW" || $indx=="SW_forBist"} {
             set txt "Browse to \'[set indx]\' bin file..."
           } else {
             set txt "Browse to \'[set indx]\' configuration file..."
@@ -865,7 +867,7 @@ proc BrowseCF {txt f base} {
   global gaTmpSet gaSet
   puts "BrowseCF <$txt> <$f> <$base>"
   switch -exact -- $f {
-    BootCF - SWCF {
+    BootCF - SWCF - SW_forBist {
       set dir [file join c:/download]
     } 
     quartusPrg {

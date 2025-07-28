@@ -33,12 +33,16 @@ proc BuildTests {} {
       lappend lTestNames HotSwap
       lappend lTestNames VendorSerial_ID
     } elseif !$::uutIsPs {
-      set lDownloadTests [list BootDownload Pages SetDownload SoftwareDownload]
+      set lDownloadTests [list BootDownload Pages]
+      if {[string match *100G_DT.* $gaSet(DutInitName)]} {
+        eval lappend lDownloadTests [list SetDownload_forBist SoftwareDownload_forBist]
+      } else {
+        eval lappend lDownloadTests [list SetDownload SoftwareDownload]
+      }
       eval lappend lTestsAllTests $lDownloadTests
       
       lappend lTestNames SetToDefault VoltageTest
-      lappend lTestNames SFP_Id ID 
-    
+      lappend lTestNames SFP_Id ID          
     
       if {$gaSet(rbTestMode)=="Full"} {
         lappend lTestNames PowerSupplyTest
@@ -48,9 +52,15 @@ proc BuildTests {} {
       lappend lTestNames DataTransmission_Set DataTransmission_FecOff DataTransmission_FecOn
     
       if {$gaSet(rbTestMode)=="Full"} {
-        lappend lTestNames HotSwap        
+        lappend lTestNames HotSwap    
         lappend lTestNames LedsTest ; # 28/04/2019 10:23:45 LedsTest1 LedsTest2
         ## 09:48 04/03/2024 lappend lTestNames FD_button
+        
+        if {[string match *100G_DT.* $gaSet(DutInitName)]} {
+          lappend lTestNames SetDownload SoftwareDownload
+          lappend lTestNames ID_DT        
+        }                
+        
         lappend lTestNames FinalSetToDefault 
       
         if {$gaSet(DefaultCF)!="" && $gaSet(DefaultCF)!="c:/aa"} {
@@ -481,10 +491,22 @@ proc ID {run} {
     set ret [Wait "Wait fot SFPs ..." 90]
     if {$ret!=0} {return $ret}
   }
-  set ret [PS_IDTest]
+  set ret [PS_IDTest "normal"]
   return $ret
 }
-
+# ***************************************************************************
+# ID_DT
+# ***************************************************************************
+proc ID_DT {run} {
+  global gaSet
+  Power all on
+  if {[string match "*[lindex [info level 0] 0]*" $gaSet(startFrom)]} {
+    set ret [Wait "Wait fot SFPs ..." 90]
+    if {$ret!=0} {return $ret}
+  }
+  set ret [PS_IDTest "DT"]
+  return $ret
+}
 # ***************************************************************************
 # DateTime
 # ***************************************************************************
@@ -629,7 +651,16 @@ proc BootDownload {run} {
 # SetDownload
 # ***************************************************************************
 proc SetDownload {run} {
-  set ret [SetSWDownload]
+  set ret [SetSWDownload "normal"]
+  if {$ret!=0} {return $ret}
+  
+  return $ret
+}
+# ***************************************************************************
+# SetDownload_forBist
+# ***************************************************************************
+proc SetDownload_forBist {run} {
+  set ret [SetSWDownload "forBist"]
   if {$ret!=0} {return $ret}
   
   return $ret
@@ -659,13 +690,28 @@ proc SoftwareDownload {run} {
   set ret [EntryBootMenu]
   if {$ret!=0} {return $ret}
   
-  set ret [SoftwareDownloadTest]
+  set ret [SoftwareDownloadTest "normal"]
   if {$ret!=0} {return $ret}
   
   set ret [Login]
   
   return $ret
 }
+# ***************************************************************************
+# SoftwareDownload_forBist
+# ***************************************************************************
+proc SoftwareDownload_forBist {run} {
+  set ret [EntryBootMenu]
+  if {$ret!=0} {return $ret}
+  
+  set ret [SoftwareDownloadTest "forBist"]
+  if {$ret!=0} {return $ret}
+  
+  set ret [Login]
+  
+  return $ret
+}
+
 # ***************************************************************************
 # DyingGaspConf
 # ***************************************************************************

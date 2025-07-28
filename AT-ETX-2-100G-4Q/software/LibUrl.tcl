@@ -5,7 +5,7 @@ package require json
 ::http::register https 8445 [list tls::socket -tls1 1]
 package require md5
 
-package provide RLWS 1.7
+package provide RLWS 1.7.1
 
 namespace eval RLWS { 
 
@@ -1383,7 +1383,7 @@ proc ::RLWS::Update_DigitalSerialNumber {id serial} {
     if {$pa_ret != 0} {
       return [list $pa_ret $pa_resTxt]
     } else {
-      return [list -1 "Fail to get Digital Serial Code"]
+      return [list -1 "Fail to Update Digital Serial Code"]
     }
   }
     

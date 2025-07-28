@@ -64,9 +64,9 @@ proc EntryDebugBootMenu {} {
 # ***************************************************************************
 # PS_IDTest
 # ***************************************************************************
-proc PS_IDTest {} {
+proc PS_IDTest {mode} {
   global gaSet buffer
-  Status "PS_ID Test"
+  Status "PS_ID Test $mode"
   Power all on
   set ret [Login]
   if {$ret!=0} {
@@ -180,119 +180,108 @@ proc PS_IDTest {} {
   }
   
   foreach {b r p d ps np up} [split $gaSet(dutFam) .] {}
-  #set gaSet(dbrSW) "6.6.1(0.17t2)"
-  #20/02/2019 15:57:08
-  #set gaSet(dbrSW) "6.6.1(0.32)"   ; #22/09/2019 09:50:47
-  #set gaSet(dbrSW) "6.8.1(0.24)" ; # 28/01/2021 08:59:35 
-  #set gaSet(dbrSW) "6.8.1(0.33)" ; # 16/02/2021 16:34:54
-  ## as in DBR   24/05/2021 10:42:16
   puts "sw:$sw gaSet(dbrSW):$gaSet(dbrSW)"
   
-  
-  
-  set gaSet(fail) "Logon fail"
-  set ret [Send $com "exit all\r" ETX-2]
-  if {$ret!=0} {return $ret}
-  set ret [LogonDebug $com]
-  if {$ret!=0} {return $ret}
-  set ret [Send $com "debug mea\r\r\r" FPGA 11]
-  if {$ret!=0} {return $ret}
-  set ret [Send $com "mea util fctl\r" fctl 2]
-  if [string match *ENTU_ERROR* $buffer] {
-    set ret [Send $com "mea util fan\r" fan 2]
-  }
-  if {$ret!=0} {
-    set ret [Send $com "\r\r" stam 1]
-  }
-  set ret [Send $com "st\r" stam 1]
-  #set tacho [lindex [split $buffer] 3]
-  set l [split $buffer]
-  puts "l:<$l>"
-  set tacho [lindex [lreplace $l  [lsearch $l st] [lsearch $l st]] 3]
-  puts "tacho:<$tacho>"
-  AddToPairLog $gaSet(pair) "Tacho: $tacho"
-  if {$tacho=="FFFF"} {
-    set gaSet(fail) "The TACHO is $tacho"  
-    return -1
-  }
+  if {$mode=="normal"} {    
+    set gaSet(fail) "Logon fail"
+    set ret [Send $com "exit all\r" ETX-2]
+    if {$ret!=0} {return $ret}
+    set ret [LogonDebug $com]
+    if {$ret!=0} {return $ret}
+    set ret [Send $com "debug mea\r\r\r" FPGA 11]
+    if {$ret!=0} {return $ret}
+    set ret [Send $com "mea util fctl\r" fctl 2]
+    if [string match *ENTU_ERROR* $buffer] {
+      set ret [Send $com "mea util fan\r" fan 2]
+    }
+    if {$ret!=0} {
+      set ret [Send $com "\r\r" stam 1]
+    }
+    set ret [Send $com "st\r" stam 1]
+    #set tacho [lindex [split $buffer] 3]
+    set l [split $buffer]
+    puts "l:<$l>"
+    set tacho [lindex [lreplace $l  [lsearch $l st] [lsearch $l st]] 3]
+    puts "tacho:<$tacho>"
+    AddToPairLog $gaSet(pair) "Tacho: $tacho"
+    if {$tacho=="FFFF"} {
+      set gaSet(fail) "The TACHO is $tacho"  
+      return -1
+    }
+      
+    set ret [Send $com "exit\r\r" ETX-2 2]
+    if {$ret!=0} {
+      Send $com "exit\r\r" ETX-2 2
+    }
     
-  set ret [Send $com "exit\r\r" ETX-2 2]
-  if {$ret!=0} {
-    Send $com "exit\r\r" ETX-2 2
+    set ret [Send $com "debug shell\r\r\r" "->" 3]
+    if {$ret!=0} {
+      set gaSet(fail) "The TACHO is $tacho"  
+      return -1
+    }
+    set ret [Send $com "HWPORT_memSize\r" "stam" 2]
+    set ret 0
+    if {$ret!=0} {
+      set gaSet(fail) "Read HWPORT_memSize fail"  
+      return -1
+    }
+    set gaSet(msval1) ""
+    set res [regexp {value[\s\=]+(\d+)[\s\=]+(0x\d00)} $buffer ma msval1 msval2]
+    if {$res==0} {
+      set gaSet(fail) "Retrive HWPORT_memSize fail"  
+      return -1
+    }
+    puts "HWPORT_memSize: $msval1 $msval2"
+    AddToPairLog $gaSet(pair) "HWPORT_memSize: $msval1 $msval2"
+    set gaSet(msval1) $msval1
+    set ret [Send $com "exit\r\r" ETX-2 2]
+    if {$ret!=0} {
+      Send $com "exit\r\r" ETX-2 2
+    }
   }
   
-  set ret [Send $com "debug shell\r\r\r" "->" 3]
-  if {$ret!=0} {
-    set gaSet(fail) "The TACHO is $tacho"  
-    return -1
-  }
-  set ret [Send $com "HWPORT_memSize\r" "stam" 2]
-  set ret 0
-  if {$ret!=0} {
-    set gaSet(fail) "Read HWPORT_memSize fail"  
-    return -1
-  }
-  set gaSet(msval1) ""
-  set res [regexp {value[\s\=]+(\d+)[\s\=]+(0x\d00)} $buffer ma msval1 msval2]
-  if {$res==0} {
-    set gaSet(fail) "Retrive HWPORT_memSize fail"  
-    return -1
-  }
-  puts "HWPORT_memSize: $msval1 $msval2"
-  AddToPairLog $gaSet(pair) "HWPORT_memSize: $msval1 $msval2"
-  set gaSet(msval1) $msval1
-  set ret [Send $com "exit\r\r" ETX-2 2]
-  if {$ret!=0} {
-    Send $com "exit\r\r" ETX-2 2
+  if {$mode=="normal" || [string match *100G_DT.* $gaSet(DutInitName)] && $mode=="DT"} {  
+    if {$sw!=$gaSet(dbrSW)} {
+      set gaSet(fail) "SW is \"$sw\". Should be \"$gaSet(dbrSW)\""
+      return -1
+    }
   }
   
-  if {$sw!=$gaSet(dbrSW)} {
-    set gaSet(fail) "SW is \"$sw\". Should be \"$gaSet(dbrSW)\""
-    return -1
-  }
-  
-#   set ret [ReadCPLD]
-#   if {$ret!=0} {return $ret}
-  
-  if {![info exists gaSet(uutBootVers)] || $gaSet(uutBootVers)==""} {
-    set ret [Send $com "exit all\r" "-2"]
-    if {$ret!=0} {return $ret}
-    set ret [Send $com "admin reboot\r" "yes/no"]
-    if {$ret!=0} {return $ret}
-    set ret [Send $com "y\r" "seconds" 20]
-    if {$ret!=0} {return $ret}
-    set ret [ReadBootVersion 1]
-    if {$ret!=0} {return $ret}
-  }
-  
-  # temporarely 18/12/2018 10:21:35
-  #set gaSet(dbrBVer) 1.17
-  
-  #set gaSet(dbrBVer) 1.19 ; #28/01/2021 09:01:26
-  
-
-  puts "gaSet(uutBootVers):<$gaSet(uutBootVers)>"
-  puts "gaSet(dbrBVer):<$gaSet(dbrBVer)>"
-  if {[string index $gaSet(dbrBVer) 0]=="B"} {
-    set dbrBVer [string range $gaSet(dbrBVer) 1 end]
-  } else {
-    set dbrBVer $gaSet(dbrBVer)
-  }
-  puts "dbrBVer:<$dbrBVer>"
-  update
-  set ret 0
-  if {$gaSet(uutBootVers)!=$dbrBVer} {
-    set gaSet(fail) "Boot Version is \"$gaSet(uutBootVers)\". Should be \"$dbrBVer\""
-    return -1
-  }
-  
-  if {$msval1==512 && $gaSet(uutBootVers)!="1.20"} {
-    set gaSet(fail) "Boot Version is \"$gaSet(uutBootVers)\".  For memSize=512 it should be 1.20"
-    return -1
-  }
-  if {$msval1==2048 && $gaSet(uutBootVers)<"1.21"} {
-    set gaSet(fail) "Boot Version is \"$gaSet(uutBootVers)\".  For memSize=2048 it should be 1.21 or higher"
-    return -1
+  if {$mode=="normal"} {
+    if {![info exists gaSet(uutBootVers)] || $gaSet(uutBootVers)==""} {
+      set ret [Send $com "exit all\r" "-2"]
+      if {$ret!=0} {return $ret}
+      set ret [Send $com "admin reboot\r" "yes/no"]
+      if {$ret!=0} {return $ret}
+      set ret [Send $com "y\r" "seconds" 20]
+      if {$ret!=0} {return $ret}
+      set ret [ReadBootVersion 1]
+      if {$ret!=0} {return $ret}
+    }
+    
+    puts "gaSet(uutBootVers):<$gaSet(uutBootVers)>"
+    puts "gaSet(dbrBVer):<$gaSet(dbrBVer)>"
+    if {[string index $gaSet(dbrBVer) 0]=="B"} {
+      set dbrBVer [string range $gaSet(dbrBVer) 1 end]
+    } else {
+      set dbrBVer $gaSet(dbrBVer)
+    }
+    puts "dbrBVer:<$dbrBVer>"
+    update
+    set ret 0
+    if {$gaSet(uutBootVers)!=$dbrBVer} {
+      set gaSet(fail) "Boot Version is \"$gaSet(uutBootVers)\". Should be \"$dbrBVer\""
+      return -1
+    }
+    
+    if {$msval1==512 && $gaSet(uutBootVers)!="1.20"} {
+      set gaSet(fail) "Boot Version is \"$gaSet(uutBootVers)\".  For memSize=512 it should be 1.20"
+      return -1
+    }
+    if {$msval1==2048 && $gaSet(uutBootVers)<"1.21"} {
+      set gaSet(fail) "Boot Version is \"$gaSet(uutBootVers)\".  For memSize=2048 it should be 1.21 or higher"
+      return -1
+    }
   }
 
   set gaSet(uutBootVers) ""
@@ -1258,11 +1247,18 @@ proc ShowArpTable {} {
 # ***************************************************************************
 # SoftwareDownloadTest
 # ***************************************************************************
-proc SoftwareDownloadTest {} {
+proc SoftwareDownloadTest {mode} {
   global gaSet buffer 
+  puts "\n [MyTime] SoftwareDownloadTest $mode" 
   set com $gaSet(comDut)
   
-  set tail [file tail $gaSet(SWCF)]
+  if {$mode=="normal"} {
+    set swcf $gaSet(SWCF)
+  } elseif {$mode=="forBist"} {
+    set swcf $gaSet(SW_forBistCF)
+  }
+  
+  set tail [file tail $swcf]
   set rootTail [file rootname $tail]
   # Download:   
   Status "Wait for download / writing to flash .."
@@ -1551,10 +1547,10 @@ proc FormatFlashAfterBootDnl {} {
 # ***************************************************************************
 # SetSWDownload
 # ***************************************************************************
-proc SetSWDownload {} {
+proc SetSWDownload {mode} {
   global gaSet buffer
   set com $gaSet(comDut)
-  Status "Set SW Download"
+  Status "Set SW Download $mode"
   
   set ret [EntryBootMenu]
   if {$ret!=0} {return $ret}
@@ -1562,21 +1558,24 @@ proc SetSWDownload {} {
   set ret [DeleteBootFiles]
   if {$ret!=0} {return $ret}
   
-  if {[file exists $gaSet(SWCF)]!=1} {
-    set gaSet(fail) "The SW file ($gaSet(SWCF)) doesn't exist"
+  if {$mode=="normal"} {
+    set swcf $gaSet(SWCF)
+  } elseif {$mode=="forBist"} {
+    set swcf $gaSet(SW_forBistCF)
+  }
+  if {[file exists $swcf]!=1} {
+    set gaSet(fail) "The SW file ($swcf) doesn't exist"
     return -1
   }
      
-  ## C:/download/SW/6.0.1_0.32/etxa_6.0.1(0.32)_sw-pack_2iB_10x1G_sr.bin -->> \
-  ## etxa_6.0.1(0.32)_sw-pack_2iB_10x1G_sr.bin
-  set tail [file tail $gaSet(SWCF)]
+  set tail [file tail $swcf]
   set rootTail [file rootname $tail]
   if [file exists c:/download/temp/$tail] {
     catch {file delete -force c:/download/temp/$tail}
     after 1000
   }
     
-  file copy -force $gaSet(SWCF) c:/download/temp 
+  file copy -force $swcf c:/download/temp 
   
   #gaInfo(TftpIp.$::ID) = 10.10.8.1 (device IP)
   #gaInfo(PcIp) = "10.10.10.254" (gateway IP/server IP)

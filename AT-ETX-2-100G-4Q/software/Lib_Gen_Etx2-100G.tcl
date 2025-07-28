@@ -52,6 +52,13 @@ proc OpenRL {} {
 # ***************************************************************************
 proc OpenComUut {} {
   global gaSet
+  if [catch {open \\\\.\\com$gaSet(comDut) RDWR} handle] {
+    set gaSet(fail) "Can't open COM-$gaSet(comDut)"
+    return -1
+  } else {
+    after 1000
+    catch {close $handle} 
+  }
   set ret [RLSerial::Open $gaSet(comDut) 9600 n 8 1]
   if {$ret!=0} {
     set gaSet(fail) "Open COM $gaSet(comDut) fail"
@@ -214,7 +221,7 @@ proc SaveUutInit {fil} {
   if [info exists gaSet(DutInitName)] {
     puts $id "set gaSet(DutInitName) \"$gaSet(DutInitName)\""
   }
-  foreach indx {Boot SW 19 Half19  DGasp ExtClk 19SyncE Half19SyncE Aux1 Aux2 Default} {
+  foreach indx {Boot SW 19 Half19  DGasp ExtClk 19SyncE Half19SyncE Aux1 Aux2 Default SW_forBist} {
     if ![info exists gaSet([set indx]CF)] {
       set gaSet([set indx]CF) ??
     }
