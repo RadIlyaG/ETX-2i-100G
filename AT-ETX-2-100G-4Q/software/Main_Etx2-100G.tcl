@@ -35,7 +35,7 @@ proc BuildTests {} {
     } elseif !$::uutIsPs {
       set lDownloadTests [list BootDownload Pages]
       if {[string match *100G_DT.* $gaSet(DutInitName)]} {
-        eval lappend lDownloadTests [list SetDownload_forBist SoftwareDownload_forBist]
+        eval lappend lDownloadTests [list SetDownload_forTestingSW SoftwareDownload_forTestingSW]
       } else {
         eval lappend lDownloadTests [list SetDownload SoftwareDownload]
       }
@@ -662,9 +662,9 @@ proc SetDownload {run} {
   return $ret
 }
 # ***************************************************************************
-# SetDownload_forBist
+# SetDownload_forTestingSW
 # ***************************************************************************
-proc SetDownload_forBist {run} {
+proc SetDownload_forTestingSW {run} {
   set ret [SetSWDownload "forBist"]
   if {$ret!=0} {return $ret}
   
@@ -703,9 +703,9 @@ proc SoftwareDownload {run} {
   return $ret
 }
 # ***************************************************************************
-# SoftwareDownload_forBist
+# SoftwareDownload_forTestingSW
 # ***************************************************************************
-proc SoftwareDownload_forBist {run} {
+proc SoftwareDownload_forTestingSW {run} {
   set ret [EntryBootMenu]
   if {$ret!=0} {return $ret}
   
