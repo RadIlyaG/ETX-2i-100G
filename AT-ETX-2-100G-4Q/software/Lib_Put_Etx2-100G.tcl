@@ -3304,6 +3304,7 @@ proc VendorSerialIDPerf {} {
   set barcode $gaSet(1.barcode1) 
   foreach {ret resTxt} [::RLWS::Update_DigitalSerialNumber $barcode $val] {}
   puts "VendorSerialIDPerf $barcode $val : <$ret> resTxt:<$resTxt>"
+  set gaSet(fail) $resTxt
   
   return $ret
 }
