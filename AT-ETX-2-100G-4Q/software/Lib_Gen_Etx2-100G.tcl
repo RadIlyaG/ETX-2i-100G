@@ -693,7 +693,7 @@ proc GetDbrName {} {
   
   if [string match {*.PS.*} $initName] {
     set ::uutIsPs 1
-    RLStatus::Show -msg atp
+    # 09:28 29/07/2025  RLStatus::Show -msg atp
   } else {
     set ::uutIsPs 0
   }

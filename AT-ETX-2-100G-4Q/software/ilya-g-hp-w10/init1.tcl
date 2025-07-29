@@ -1,6 +1,6 @@
-set gaGui(xy) +730+150
-set gaSet(entDUT) "ETX-2I-100G/ACRF/4Q/16SFPP"
-set gaSet(DutInitName) "ETX-2I-100G.ACRF.4Q.16SFPP.tcl"
+set gaGui(xy) +824+150
+set gaSet(entDUT) "ETX-2I-100G_DT/H/NULL/4Q/16SFPP"
+set gaSet(DutInitName) "ETX-2I-100G_DT.H.NULL.4Q.16SFPP.tcl"
 set gaSet(performShortTest) "0"
 set gaSet(eraseTitle) "0"
 set gaSet(ddrMultyQty) "5"
