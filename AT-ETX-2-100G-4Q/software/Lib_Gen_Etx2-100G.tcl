@@ -916,7 +916,11 @@ proc DownloadConfFile {cf cfTxt save com} {
           set line "address $address"
         }
       }
-      set waitFor 2I
+      if {[string match *Aux* $cfTxt]} {
+        set gaSet(prmpt) 205A
+      } else {
+        set waitFor 2I
+      }
       if {[string match *WallGarden_TYPE-7* $line]} {
         set gaSet(prmpt) "WallGarden_TYPE-7"          
       }
@@ -1180,7 +1184,8 @@ proc InitAux {aux} {
   
   if {$ret==0} {
     Send $com "exit all\r" stam 0.25 
-    set cf $gaSet([set aux]CF) 
+    # set cf $gaSet([set aux]CF) 
+    set cf "C:/AT-ETX-2-100G-4Q/ConfFiles/[set aux].txt"
     set cfTxt "$aux"
     set ret [DownloadConfFile $cf $cfTxt 1 $com]    
   }  

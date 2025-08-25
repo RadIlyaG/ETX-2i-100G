@@ -22,7 +22,7 @@ DeleteOldApp
 DeleteOldUserDef
 
 set host_name  [info host]
-if {[string match *avraham-bi* $host_name] || [string match *david-ya* $host_name] || [string match *ofer-m-* $host_name]} {
+if {[string match *ilya_g* $host_name] || [string match *avraham-bi* $host_name] || [string match *david-ya* $host_name] || [string match *ofer-m-* $host_name]} {
   set ::repairMode 1
 } else {
   set ::repairMode 0
@@ -179,6 +179,8 @@ source lib_EcoCheck.tcl
 source lib_GuiIdTraceOper.tcl
 
 source lib_PS_Etx2-100G.tcl
+
+source Lib_DSOX1102A.tcl
 
 DeleteOldApp
 DeleteOldUserDef

@@ -363,7 +363,12 @@ proc DyingGaspPerf {psOffOn psOff} {
     exec [info nameofexecutable] Lib_tshark.tcl $intf $dur $resFile &
     #catch {exec C:\\Program\ Files\\Wireshark\\tshark.exe -i $intf -O snmp -x -S lIsT -a duration:$dur  -A "c:\\temp\\tmp.cap" > [set resFile] &} rr
     #after 1000
-    set dutIp 10.10.10.1[set gaSet(pair)]
+    # 13:20 20/08/2025set dutIp 10.10.10.1[set gaSet(pair)]
+    if {$gaSet(pair)=="SE"} {
+      set dutIp 10.10.10.111
+    } else {
+      set dutIp 10.10.10.1[set gaSet(pair)]
+    } 
     Send $gaSet(comDut) logout\r user
     Send $gaSet(comDut) su\r password
     Send $gaSet(comDut) 1234\r ETX
@@ -660,6 +665,12 @@ proc Login {} {
     set ret 0
     set gaSet(prmpt) "2I"
   }
+  if {[string match *-2i* $buffer]} {
+    set ret 0
+    set gaSet(prmpt) "-2i"
+    puts "login lo:8 ret:<$ret>" ; update
+    return 0
+  }
   if {[string match {*Are you sure?*} $buffer]==1} {
     Send $gaSet(comDut) n\r stam 1
     append gaSet(loginBuffer) "$buffer"
@@ -677,6 +688,7 @@ proc Login {} {
     puts "login lo:10 ret:<$ret>" ; update
     return 0
   }
+  
    
    
   if {[string match *password* $buffer]} {
@@ -731,6 +743,11 @@ proc Login {} {
       set gaSet(prmpt) "ZTP"
       set ret 0
       puts "login lo:3 ret:<$ret>" ; update
+    }
+    if {[string match *-2i* $buffer]} {
+      set gaSet(prmpt) "-2i"
+      set ret 0
+      puts "login lo:1.1 ret:<$ret>" ; update
     }
     $gaSet(runTime) configure -text ""
     return $ret
@@ -827,6 +844,11 @@ proc Login {} {
           set gaSet(prmpt) "ZTP"
           set ret 0
           puts "login lo:22 ret:<$ret>" ; update
+        }
+        if {[string match *-2i* $buffer]} {
+          set gaSet(prmpt) "-2i"
+          set ret 0
+          puts "login lo:23 ret:<$ret>" ; update
         }
       }
     }
@@ -1261,7 +1283,9 @@ proc SoftwareDownloadTest {mode} {
     set swcf $gaSet(SWCF)
   } elseif {$mode=="forBist"} {
     set swcf $gaSet(SW_forBistCF)
-  }
+  } elseif {$mode=="forPTP"} {
+    set swcf $gaSet(SW_forPTPCF)
+  }  
   
   set tail [file tail $swcf]
   set rootTail [file rootname $tail]
@@ -1567,6 +1591,9 @@ proc SetSWDownload {mode} {
     set swcf $gaSet(SWCF)
   } elseif {$mode=="forBist"} {
     set swcf $gaSet(SW_forBistCF)
+  } elseif {$mode=="forPTP"} {
+    set gaSet(SW_forPTPCF) "C:/download/SW/etxa_6.8.6.19_CSG/sw-pack_2i_100g_4q_csg_6_8_6-0_19.bin"
+    set swcf $gaSet(SW_forPTPCF)
   }
   if {[file exists $swcf]!=1} {
     set gaSet(fail) "The SW file ($swcf) doesn't exist"
@@ -2363,7 +2390,11 @@ proc DyingGaspSetup {} {
   if {$ret!=0} {return $ret}
   
   set goodPings 0
-  set dutIp 10.10.10.1[set gaSet(pair)]  
+  if {$gaSet(pair) == "SE"} {
+    set dutIp 10.10.10.111 
+  } else {
+    set dutIp 10.10.10.1[set gaSet(pair)]  
+  }
   for {set i 1} {$i<=30} {incr i} {   
     set ret [Ping $dutIp]
     puts "DyingGaspSetup ping after download i:$i ret:$ret"
@@ -3308,3 +3339,397 @@ proc VendorSerialIDPerf {} {
   
   return $ret
 }
+
+# ***************************************************************************
+# PtpClock_conf_perf
+# ***************************************************************************
+proc PtpClock_conf_perf {} {
+  global gaSet buffer
+  Status "PtpClock_conf Test"
+  Power all on
+  set ret [Login]
+  if {$ret!=0} {
+    #set ret [Login]
+    if {$ret!=0} {return $ret}
+  }   
+  set com $gaSet(comDut)  
+  set gaSet(fail) "Load PTP Clock Configuration fail"  
+  set ret [Send $com "exit all\r" $gaSet(prmpt)]
+  if {$ret!=0} {return $ret}
+  
+  set cf "C:/AT-ETX-2-100G-4Q/ConfFiles/PtpClkRcvr.txt"
+  set cfTxt "PTP Clock Configuration"
+  set ret [DownloadConfFile $cf $cfTxt 1 $com]
+  return $ret  
+}
+
+# ***************************************************************************
+# PtpClock_run_perf
+# ***************************************************************************
+proc PtpClock_run_perf {} {
+  global gaSet buffer
+  Status "PtpClock_run Test"
+  Power all on
+  set sec1 [clock seconds]
+  set ret [Login]
+  if {$ret!=0} {
+    #set ret [Login]
+    if {$ret!=0} {return $ret}
+  }   
+  set com $gaSet(comDut)  
+  set ret [Send $com "exit all\r" $gaSet(prmpt)]
+  if {$ret!=0} {return $ret}
+  set ret [Send $com "show con sys clock recovered 0/1 ptp g.8275-1 statistics running\r" $gaSet(prmpt)]
+  if {$ret!=0} {
+    set gaSet(fail) "Read recovered g.8275-1 statistics fail"
+    return $ret
+  }
+  set ret [ReadPtpStats recovered]
+  if {$ret!=0} {return $ret}
+  
+  set ret [Send $com "show con sys clock master 0/1 ptp g.8275-1 statistics running\r" $gaSet(prmpt)]
+  if {$ret!=0} {
+    set gaSet(fail) "Read master g.8275-1 statistics fail"
+    return $ret
+  }
+  set ret [ReadPtpStats master]
+  if {$ret!=0} {return $ret}
+  
+  for {set i 1} {$i<=25} {incr i} {
+    Status "Read recovered g.8275-1 status ($i)"
+    set ret [Send $com "show con sys clock recovered 0/1 ptp g.8275-1 status\r" $gaSet(prmpt)]
+    if {$ret!=0} {
+      set gaSet(fail) "Read recovered g.8275-1 status fail"
+      return $ret
+    }
+    set res [regexp {Clock State Time : (\w+) Clock} $buffer ma val]
+    puts "i:<$i> res:<$res> ma:<$ma> val:<$val>"
+    if {$res==0} {
+      set gaSet(fail) "Read Clock State Time fail"
+      return -1
+    } 
+    if {$val=="Locked"} {
+      set ret 0
+      break
+    }
+    after 4000
+  }
+  set sec2 [clock seconds]
+  AddToPairLog $gaSet(pair) "After [expr {$sec2 - $sec1}] seconds Clock State Time : $val. "
+  if {$val!="Locked"} {
+    set gaSet(fail) "Clock State Time : $val"
+    return -1
+  }
+  
+  return $ret
+}
+
+# ***************************************************************************
+# ReadPtpStats
+# ***************************************************************************
+proc ReadPtpStats {clk} {
+  global gaSet buffer
+  puts "ReadPtpStats $clk"
+  set res [regexp {Announce[\s\:]+(\d+)} $buffer ma ann]
+  if {$res==0} {
+    set gaSet(fail) "Read Rx Announce of $clk clk fail"
+    return -1
+  }
+  set res [regexp {Sync[\s\:]+(\d+)} $buffer ma sync]
+  if {$res==0} {
+    set gaSet(fail) "Read Rx Sync of $clk clk fail"
+    return -1
+  }
+  set res [regexp {Request[\s\:]+(\d+)} $buffer ma req]
+  if {$res==0} {
+    set gaSet(fail) "Read Tx Request of $clk clk fail"
+    return -1
+  }
+  set res [regexp {Response[\s\:]+(\d+)} $buffer ma resp]
+  if {$res==0} {
+    set gaSet(fail) "Read Tx Response of $clk clk fail"
+    return -1
+  }
+  foreach txt {"Rx Announce" "Rx Sync" "Tx Request" "Tx Response" } val [list $ann $sync $req $resp] {
+    set ttxxtt "Clock [set clk], [set txt]: $val"
+    AddToPairLog $gaSet(pair) $ttxxtt
+    puts $ttxxtt
+  }
+  # AddToPairLog $gaSet(pair) "Rx Announce: $ann"
+  # AddToPairLog $gaSet(pair) "Rx Sync: $sync"
+  # AddToPairLog $gaSet(pair) "Tx Request: $req"
+  # AddToPairLog $gaSet(pair) "Tx Response: $resp"
+  if {$ann==0 || $sync==0 || $req==0 || $resp==0} {
+    set gaSet(fail) "Not all counters of $clk g.8275-1 are nonzero"
+    return -1
+  }
+  return 0
+}
+
+# ***************************************************************************
+# ExtClkTxTest
+# ***************************************************************************
+proc ExtClkTxTest {mode} {
+  global gaSet buffer
+  Status "ExtClkTxTest $mode"
+  set ret [Login]
+  if {$ret!=0} {
+    #set ret [Login]
+    if {$ret!=0} {return $ret}
+  }
+  
+  set com $gaSet(comDut)
+  Send $com "exit all\r" stam 0.25 
+  if {$mode=="en"} {
+    set frc "force-t4-as-t0"
+  } else {
+    set frc "no force-t4-as-t0"
+  }
+  set ret [Send $com "con sys clock domain 1 $frc\r" $gaSet(prmpt)]
+  
+}
+
+# ***************************************************************************
+# ExtClkTest
+# ***************************************************************************
+proc ExtClkTest {mode} {
+  puts "[MyTime] ExtClkTest $mode"
+  global gaSet buffer
+  set ret [Login]
+  if {$ret!=0} {
+    #set ret [Login]
+    if {$ret!=0} {return $ret}
+  }
+  set gaSet(fail) "Logon fail"
+  set com $gaSet(comDut)
+  Send $com "exit all\r" stam 0.25 
+  
+#   set ret [Send $com "configure system clock station 1/1\r" "(1/1)"]
+#   if {$ret!=0} {return $ret}
+#   set ret [Send $com "shutdown\r" "(1/1)"]
+#   if {$ret!=0} {return $ret}
+#   Send $com "exit all\r" stam 0.25 
+  
+  if {$mode=="Unlocked"} {
+    set ret [Send $com "configure system clock\r" ">clock"]
+    if {$ret!=0} {return $ret} 
+    set ret [Send $com "domain 1\r" "domain(1)"]
+    if {$ret!=0} {return $ret} 
+    set ret [Send $com "show status\r" "domain(1)"]
+    if {$ret!=0} {return $ret} 
+    set syst [set clkSrc [set state ""]]
+    regexp {System Clock Source[\s:]+(\d)\s+State[\s:]+(\w+)\s} $buffer syst clkSrc state
+    puts "ExtClock Unlocked syst:<$syst> clkSrc:<$clkSrc> state:<$state>"
+    if {$clkSrc!="0" && $state!="Freerun"} {
+      set gaSet(fail) "$syst"
+      return -1
+    }
+  }
+ 
+ if {$mode=="Locked"} {
+    #set cf $gaSet(ExtClkCF) 
+    set cf "C:/AT-ETX-2-100G-4Q/ConfFiles/ExtClk.txt"
+    set cfTxt "EXT CLK"
+    set ret [DownloadConfFile $cf $cfTxt 0 $com]
+    if {$ret!=0} {return $ret}
+    
+    # set ret [Send $com "exit all\r" $gaSet(prmpt)]
+    # if {$ret!=0} {return $ret}
+    # set ret [Send $com "configure system clock station 1/1\r" "station"]
+    # if {$ret!=0} {return $ret}
+    # set ret [Send $com "shutdown\r" "station"]
+    # if {$ret!=0} {return $ret}
+    # set ret [Send $com "line-code hdb3\r" "station"]
+    # if {$ret!=0} {return $ret}
+    # set ret [Send $com "no shutdown\r" "station"]
+    # if {$ret!=0} {return $ret}
+    # set ret [Send $com "exit all\r" $gaSet(prmpt)]
+    # if {$ret!=0} {return $ret}
+    
+    set ret [Send $com "configure system clock\r" ">clock"]
+    if {$ret!=0} {return $ret} 
+    set ret [Send $com "domain 1\r" "domain(1)"]
+    if {$ret!=0} {return $ret} 
+    for {set i 1} {$i<=20} {incr i} {
+      puts "\nExtClock wait for Locked i:$i" ; update
+      set ret [Send $com "show status\r" "domain(1)"]
+      if {$ret!=0} {return $ret} 
+      set syst [set clkSrc [set state ""]]
+      regexp {System Clock Source[\s:]+(\d)\s+State[\s:]+(\w+)\s} $buffer syst clkSrc state
+      puts "ExtClock syst:<$syst> clkSrc:<$clkSrc> state:<$state>"
+      if {$clkSrc=="1" && $state=="Locked"} {
+        set ret 0
+        break
+      } else {      
+        set ret -1
+        after 1000
+      }
+    }
+    if {$ret=="-1"} {
+      set gaSet(fail) "$syst"
+    } elseif {$ret=="0"} {
+      set ret [Send $com "no source 1\r" "domain(1)"]
+      if {$ret!=0} {return $ret}
+    }
+  }
+  return $ret
+}
+
+# ***************************************************************************
+# Login205
+# ***************************************************************************
+proc Login205 {aux} {
+  global gaSet buffer gaLocal
+  set ret 0
+  set statusTxt  [$gaSet(sstatus) cget -text]
+  Status "Login into AUX-$aux"
+#   set ret [MyWaitFor $gaSet(comDut) {ETX-2I user>} 5 1]
+  set com $gaSet(com$aux)
+  Send $com "\r" stam 0.25
+  Send $com "\r" stam 0.25
+  if {([string match {*205A*} $buffer]==0) && ([string match {*user>*} $buffer]==0)} {
+    set ret -1  
+  } else {
+    set ret 0
+  }
+  if {[string match {*Are you sure?*} $buffer]==1} {
+   Send $com n\r stam 1
+  }
+   
+  if {[string match *password* $buffer] || [string match {*press a key*} $buffer]} {
+    set ret 0
+    Send $com \r stam 0.25
+  }
+  if {[string match *FPGA* $buffer]} {
+    set ret 0
+    Send $com exit\r\r 205A
+  }
+  if {[string match *:~$* $buffer] || [string match *login:* $buffer] || \
+      [string match *Password:* $buffer]  || [string match *rad#* $buffer]} {
+    set ret 0
+    Send $com \x1F\r\r 205A
+  }
+  if {[string match *205A* $buffer]} {
+    set ret 0
+    return 0
+  }
+  if {[string match {*C:\\*} $buffer]} {
+    set ret 0
+    return 0
+  } 
+  if {[string match *user* $buffer]} {
+    Send $com su\r stam 0.25
+    set ret [Send $com 1234\r "205A"]
+    $gaSet(runTime) configure -text ""
+    return $ret
+  }
+  if {$ret!=0} {
+    set ret [Wait "Wait for Aux-$aux up" 20 white]
+    if {$ret!=0} {return $ret}  
+  }
+  for {set i 1} {$i <= 60} {incr i} { 
+    if {$gaSet(act)==0} {return -2}
+    Status "Login into AUX-$aux"
+    puts "Login into AUX-$aux i:$i"; update
+    $gaSet(runTime) configure -text $i
+    Send $com \r stam 5
+    #set ret [MyWaitFor $gaSet(comDut) {ETX-2I user> } 5 60]
+    if {([string match {*205A*} $buffer]==1) || ([string match {*user>*} $buffer]==1)} {
+      puts "if1 <$buffer>"
+      set ret 0
+      break
+    }
+    ## exit from boot menu 
+    if {[string match *boot* $buffer]} {
+      Send $com run\r stam 1
+    }   
+    if {[string match *login:* $buffer]} { }
+    if {[string match *:~$* $buffer] || [string match *login:* $buffer] || [string match *Password:* $buffer]} {
+      Send $com \x1F\r\r 205A
+      return 0
+    }
+    if {[string match {*C:\\*} $buffer]} {
+      set ret 0
+      return 0
+    } 
+  }
+  if {$ret==0} {
+    if {[string match *user* $buffer]} {
+      Send $com su\r stam 1
+      set ret [Send $com 1234\r "205A"]
+    }
+  }  
+  if {$ret!=0} {
+    set gaSet(fail) "Login to AUX-$aux Fail"
+  }
+  $gaSet(runTime) configure -text ""
+  if {$gaSet(act)==0} {return -2}
+  Status $statusTxt
+  return $ret
+}
+
+# ***************************************************************************
+# SyncELockClkTest
+# ***************************************************************************
+proc SyncELockClkTest {} {
+  puts "[MyTime] SyncELockClkTest"
+  global gaSet buffer
+  set ret [Login]
+  if {$ret!=0} {
+    #set ret [Login]
+    if {$ret!=0} {return $ret}
+  }
+  Status "Reading Clock's status"
+  set gaSet(fail) "Logon fail"
+  set com $gaSet(comDut)
+  Send $com "exit all\r" stam 0.25 
+  set ret [Send $com "configure system clock\r" ">clock"]
+  if {$ret!=0} {return $ret} 
+  set ret [Send $com "domain 1\r" "domain(1)"]
+  if {$ret!=0} {return $ret} 
+  for {set i 1} {$i<=5} {incr i} {
+    puts "\rattempt $i"
+    set ret [Send $com "show status\r" "domain(1)"]
+    if {$ret!=0} {return $ret} 
+    set syst [set sysQlty [set sysClkSrc [set sysState ""]]]
+    regexp {System Clock Source[\s:]+(\d)\s+State[\s:]+(\w+)\s+Quality[\s:]+(\w+)\s} $buffer syst sysClkSrc sysState sysQlty
+    set stat [set statClkSrc [set statState ""]]
+    regexp {Station Out Clock Source[\s:]+(\d)\s+State[\s:]+(\w+)\s+} $buffer stat statClkSrc statState 
+    puts "sysClkSrc:<$sysClkSrc> sysState:<$sysState> sysQlty:<$sysQlty>"
+    puts "statClkSrc:<$statClkSrc> statState:<$statState>"
+    update
+    set fail ""
+    if {$sysClkSrc=="2" && $sysState=="Locked" && $sysQlty=="PRC" && $statClkSrc=="2" && $statState=="Locked"} {
+      set ret 0
+      break
+    } else {  
+      if {$sysClkSrc!="1"} {
+        append fail "System Clock Source: $sysClkSrc and not 1" , " "
+      }  
+      if {$sysState!="Locked"} {
+        append fail "System Clock State: $sysState and not Locked" , " "
+      }
+      if {$sysQlty!="PRC"} {
+        append fail "System Clock Quality: $sysQlty and not PRC" , " "
+      }
+      if {$statClkSrc!="1"} {
+        append fail "Station Out Clock Source: $statClkSrc and not 1" , " "
+      }
+      if {$statState!="Locked"} {
+        append fail "Station Out Clock State: $statState and not Locked"
+      }
+      set ret -1
+      set fail [string trimright $fail]
+      set fail [string trimright $fail ,]
+      after 1000
+    }
+  }
+  if {$ret=="-1"} {
+    set gaSet(fail) "$fail"
+  } elseif {$ret=="0"} {
+    #set ret [Send $com "no source 1\r" "domain(1)"]
+    #if {$ret!=0} {return $ret}
+  }
+  
+  return $ret
+} 

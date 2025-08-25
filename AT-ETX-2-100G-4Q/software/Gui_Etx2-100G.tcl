@@ -89,6 +89,9 @@ proc GUI {} {
       {radiobutton "One test OFF" init {} {} -value 0 -variable gaSet(oneTest)}
       {separator}    
       {command "Release / Debug mode" {} "" {} -command {GuiReleaseDebugMode}}                 
+      {separator}  
+      {command "Init AUX1" {} "" {} -command {InitAux Aux1}} 
+      {command "Init AUX2" {} "" {} -command {InitAux Aux2}} 
       {separator}
       {cascad "TestMode" {} tm 0 {
         {radiobutton "Full Tests" {} "" {} -command {ToggleTestMode} -variable gaSet(rbTestMode) -value "Full"}  
@@ -116,18 +119,21 @@ proc GUI {} {
     }
     "&Terminal" terminal tterminal 0  {
       {command "UUT" "" "" {} -command {OpenTeraTerm gaSet(comDut)}}
-      {command "AUX" "" "" {} -command {OpenTeraTerm gaSet(comAux)}}      
+      {command "ETX-2i-10G AUX" "" "" {} -command {OpenTeraTerm gaSet(comAux)}}      
+      {command "ETX-205 AUX1" "" "" {} -command {OpenTeraTerm gaSet(comAux1)}}      
+      {command "ETX-205 AUX2" "" "" {} -command {OpenTeraTerm gaSet(comAux2)}}  
     }
-    "&Quartus setup" quartus quartus 0 {
-      {command "&Files setup" about "" {} -command {GuiQuartusSetup} 
-      }
-    }
+    
     "&About" all about 0 {
       {command "&About" about "" {} -command {About} 
       }
     }
   }
   if 0 {
+    "&Quartus setup" quartus quartus 0 {
+      {command "&Files setup" about "" {} -command {GuiQuartusSetup} 
+      }
+    }
     "&Short Tests" all shortTests 0 {
       {radiobutton "Perform Short Test" {} {} {} -command {UpdStatBarShortTest; BuildTests} -variable gaSet(performShortTest) -value 1}
       {radiobutton "Perform Full Test" {} {} {} -command {UpdStatBarShortTest; BuildTests} -variable gaSet(performShortTest) -value 0}       
@@ -824,7 +830,10 @@ proc GuiInventory {} {
     #foreach indx {Boot SW 19 Half19 DGasp ExtClk 19SyncE Half19SyncE Aux1 Aux2 SW_forBist} {}
     
     foreach indx {Boot SW DGasp ExtClk 19SyncE Half19SyncE Aux1 Aux2 SW_forBist} {
-      if {$indx==$gaSet(dutBox) || $indx=="DGasp" || $indx=="ExtClk" || $indx=="${gaSet(dutBox)}SyncE" || $indx=="Aux1" || $indx=="Aux2" || $indx=="Boot" || $indx=="SW" || $indx=="Default" || $indx=="SW_forBist"}  {
+      ## ExtClk and SyncE files are hardcoded
+      #if {$indx==$gaSet(dutBox) || $indx=="DGasp" || $indx=="ExtClk" || $indx=="${gaSet(dutBox)}SyncE" || $indx=="Aux1" || $indx=="Aux2" || $indx=="Boot" || $indx=="SW" || $indx=="Default" || $indx=="SW_forBist"}  {}
+      
+      if {$indx==$gaSet(dutBox) || $indx=="DGasp" || $indx=="Boot" || $indx=="SW" || $indx=="Default" || $indx=="SW_forBist"}  {
         if {$p!="P" && ($indx=="ExtClk" || $indx=="${gaSet(dutBox)}SyncE" || $indx=="Aux1" || $indx=="Aux2")} {
           ## don't show files, reffered to PPT, in UUT without PPT 
           continue

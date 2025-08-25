@@ -1,0 +1,34 @@
+exit all
+config
+    system
+        clock
+            master 1 ptp g.8275-1
+                priority2 0
+                no shutdown
+            exit
+            domain 1
+                force-t4-as-t0
+                source 1 rx-port ethernet 6
+                    quality-level prc
+                    wait-to-restore 0
+                    clear-
+                exit
+            exit
+        exit
+    exit
+    port
+        ethernet 1
+            tx-ssm
+        exit
+        ethernet 3
+            tx-ssm
+        exit
+        svi 1
+            no shutdown
+        exit
+    exit
+    flows
+        classifier-profile "all" match-any match all
+        classifier-profile "untagged" match-any match untagged
+        flow "eth1_svi1"
+exit allconfig    system        clock            master 1 ptp g.8275-1                priority2 0                no shutdown            exit            domain 1                force-t4-as-t0                source 1 rx-port ethernet 6                    quality-level prc                    wait-to-restore 0                    clear-                exit            exit        exit    exit    port        ethernet 1            tx-ssm        exit        ethernet 3            tx-ssm        exit        svi 1            no shutdown        exit    exit    flows        classifier-profile "all" match-any match all        classifier-profile "untagged" match-any match untagged        flow "eth1_svi1"            classifier "untagged"            policer profile "Policer1"            ingress-port ethernet 1            egress-port svi 1            no shutdown        exit        flow "svi1_eth1"            classifier "all"            policer profile "Policer1"            ingress-port svi 1            egress-port ethernet 1 queue 0 block 0/1            no shutdown        exit    exit    system        clock            ptp-port 1 g.8275-1                port 1                    bind svi 1                    state master                    no shutdown                exit            exit        exit    exit

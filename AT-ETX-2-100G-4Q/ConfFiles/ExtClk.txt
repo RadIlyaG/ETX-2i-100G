@@ -1,0 +1,12 @@
+exit all
+configure system clock station 1/1
+shutdown
+line-code hdb3
+no shutdown
+exit
+domain 1
+source 1 station 1/1
+quality-level prc
+priority 1
+wait-to-restore 0
+exit all

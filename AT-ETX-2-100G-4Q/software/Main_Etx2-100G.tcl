@@ -33,13 +33,20 @@ proc BuildTests {} {
       lappend lTestNames HotSwap
       lappend lTestNames VendorSerial_ID
     } elseif !$::uutIsPs {
-      set lDownloadTests [list BootDownload Pages]
+      set lTestNames [list BootDownload Pages]
       if {[string match *100G_DT.* $gaSet(DutInitName)]} {
-        eval lappend lDownloadTests [list SetDownload_forTestingSW SoftwareDownload_forTestingSW]
+        eval lappend lTestNames [list SetDownload_forTestingSW SoftwareDownload_forTestingSW]
       } else {
-        eval lappend lDownloadTests [list SetDownload SoftwareDownload]
+        if {$p=="P"} {
+          lappend lTestNames SetDownload_forPTP SoftwareDownload_forPTP
+          lappend lTestNames PtpClock_conf PtpClock_run
+          lappend lTestNames ExtClk SyncE_conf SyncE_run
+          # lappend lTestNames SetDownload SoftwareDownload
+          # lappend lTestNames ID_PTP   
+        }
+        eval lappend lTestNames [list SetDownload SoftwareDownload]
       }
-      eval lappend lTestsAllTests $lDownloadTests
+      #eval lappend lTestsAllTests $lDownloadTests
       
       lappend lTestNames SetToDefault VoltageTest
       lappend lTestNames SFP_Id ID          
@@ -59,7 +66,15 @@ proc BuildTests {} {
         if {[string match *100G_DT.* $gaSet(DutInitName)]} {
           lappend lTestNames SetDownload SoftwareDownload
           lappend lTestNames ID_DT        
-        }                
+        }        
+
+        # if {$p=="P"} {
+          # lappend lTestNames SetDownload_forPTP SoftwareDownload_forPTP
+          # lappend lTestNames PtpClock_conf PtpClock_run
+          # lappend lTestNames ExtClk SyncE_conf SyncE_run
+          # lappend lTestNames SetDownload SoftwareDownload
+          # lappend lTestNames ID_PTP   
+        # }
         
         lappend lTestNames FinalSetToDefault 
       
@@ -513,6 +528,19 @@ proc ID_DT {run} {
   return $ret
 }
 # ***************************************************************************
+# ID_PTP
+# ***************************************************************************
+proc ID_PTP {run} {
+  global gaSet
+  Power all on
+  # if {[string match "*[lindex [info level 0] 0]*" $gaSet(startFrom)]} {
+    # set ret [Wait "Wait fot SFPs ..." 90]
+    # if {$ret!=0} {return $ret}
+  # }
+  set ret [PS_IDTest "PTP"]
+  return $ret
+}
+# ***************************************************************************
 # DateTime
 # ***************************************************************************
 proc DateTime {run} {
@@ -671,6 +699,15 @@ proc SetDownload_forTestingSW {run} {
   return $ret
 }
 # ***************************************************************************
+# 
+# ***************************************************************************
+proc SetDownload_forPTP {run} {
+  set ret [SetSWDownload "forPTP"]
+  if {$ret!=0} {return $ret}
+  
+  return $ret
+}
+# ***************************************************************************
 # Pages
 # ***************************************************************************
 proc Pages {run} {
@@ -710,6 +747,20 @@ proc SoftwareDownload_forTestingSW {run} {
   if {$ret!=0} {return $ret}
   
   set ret [SoftwareDownloadTest "forBist"]
+  if {$ret!=0} {return $ret}
+  
+  set ret [Login]
+  
+  return $ret
+}
+# ***************************************************************************
+# 
+# ***************************************************************************
+proc SoftwareDownload_forPTP {run} {
+  set ret [EntryBootMenu]
+  if {$ret!=0} {return $ret}
+  
+  set ret [SoftwareDownloadTest "forPTP"]
   if {$ret!=0} {return $ret}
   
   set ret [Login]
@@ -762,6 +813,8 @@ proc DyingGaspTest {run} {
   if {$ret==0} {
     Power $psOffOn on
     Power $psOff on
+    set ret [Login]
+    if {$ret!=0} {return $ret}
   }
   
   return $ret
@@ -920,3 +973,247 @@ global gaSet
   set ret [VendorSerialIDPerf]
   return $ret 
 }
+
+# ***************************************************************************
+# PtpClock_conf
+# ***************************************************************************
+proc PtpClock_conf {run} {
+  set ret 0
+  #set ret [FactDefault std noWD]
+  if {$ret!=0} {return $ret}
+  set ret [PtpClock_conf_perf]
+  return $ret
+}
+
+# ***************************************************************************
+# PtpClock_run
+# ***************************************************************************
+proc PtpClock_run {run} {
+  set ret [Wait "PTP Clock Recovering" 10 white]
+  set ret [PtpClock_run_perf]
+  if {$ret!=0} {
+    set ret [Wait "PTP Clock Recovering" 10 white]
+    set ret [PtpClock_run_perf]
+    if {$ret!=0} {return $ret}
+  }
+  ## the FactDefault done in ExtClk
+  ## set ret [FactDefault std noWD]
+  
+  return $ret
+}
+
+# ***************************************************************************
+# ExtClk
+# ***************************************************************************
+proc ExtClk {run} {
+  global gaSet
+  Power all on
+  set ret [FactDefault std break]
+  if {$ret!=0} {return $ret}
+  set ret [Wait "Wait for Device rebooting" 40 white]
+  
+  set ret [ExtClkTxTest dis]
+  if {$ret!=0} {return $ret}
+  set ret [ExtClkTest Unlocked]
+  if {$ret!=0} {return $ret}
+  set ret [ExtClkTxTest en]
+  if {$ret!=0} {return $ret}
+  set ret [ExtClkTest Locked]
+  if {$ret!=0} {
+    Power all off
+    after 3000
+    Power all on  
+    Wait "Wait for UP" 40
+    set ret [ExtClkTxTest en]
+    if {$ret!=0} {return $ret}
+    set ret [ExtClkTest Locked]
+  }
+  return $ret
+}
+
+# ***************************************************************************
+# SyncE_conf
+# ***************************************************************************
+proc SyncE_conf {run} {
+  global gaSet  buffer
+  if {$gaSet(pair)!="SE"} {
+    set gaSet(fail) "It is no possible to perform SyncE test on this Tester"
+    return -2
+  }
+  Power all on 
+  foreach {b r p d ps np up} [split $gaSet(dutFam) .] {}
+  
+  if 1 {
+    set txt "Connect 3 fiber optics between:\n\
+    Port 0/1 of AUX 1 (A) to Port 1/1 of the UUT\n\
+    Port 0/3 of AUX 1 (B) to Port 1/3 of the UUT\n\
+    Port 0/1 of AUX 2 (C) to Port 1/5 of the UUT"
+    set res [DialogBoxRamzor -type "Ok Stop" -icon /images/info -title "Sync_E"\
+      -message $txt]
+    if {$res=="Stop"} {
+      return -2
+    }
+    set ret 0
+  }  
+  
+  ##23/02/2020 11:09:26 Check AUXes config
+  foreach aux {Aux1 Aux2} {
+    set com $gaSet(com$aux)
+    catch {RLSerial::Close $com}
+    after 100
+    set ret [RLSerial::Open $com 9600 n 8 1]
+    ##set ret [RLCom::Open $com 9600 8 NONE 1]
+    set ret [Login205 $aux]
+    if {$ret!=0} {
+      set ret [Login205 $aux]
+    }
+    if {$ret!=0} {
+      set gaSet(fail) "Logon to $aux fail"
+      return -1
+    }
+    
+    Send $com "exit all\r" stam 0.25
+    set ret [Send $com "configure system clock domain 1\r" domain(1)] 
+    if {$ret!=0} {
+      set gaSet(fail) "Read Domain 1 at $aux fail"
+      return -1
+    }
+    set ret [Send $com "info\r" domain(1)] 
+    if {$ret!=0} {
+      set gaSet(fail) "Read Info of Domain 1 at $aux fail"
+      return -1
+    }
+    if {[string match *force-t4-as-t0* $buffer]} {
+      ## the aux is configured
+      set ret 0
+      Status "$aux is configured"
+      catch {RLSerial::Close $com}
+      break
+    } else {
+      Send $com "exit all\r" stam 0.25 
+      # set cf $gaSet([set aux]CF) 
+      set cf "C:/AT-ETX-2-100G-4Q/ConfFiles/[set aux].txt"
+      set cfTxt "$aux"
+      set ret [DownloadConfFile $cf $cfTxt 1 $com] 
+      if {$ret==0} {
+        Status "$aux passed configuration"
+      } else {
+        set gaSet(fail) "Configuration of $aux failed" 
+        return $ret 
+      }
+      catch {RLSerial::Close $com}
+    }
+  }
+  
+  set ret [Login]
+  if {$ret!=0} {
+    #set ret [Login]
+    if {$ret!=0} {return $ret}
+  }
+  set gaSet(fail) "Logon fail"
+  set com $gaSet(comDut)
+  Send $com "exit all\r" stam 0.25 
+ 
+  foreach {b r p d ps np up} [split $gaSet(dutFam) .] {}
+  
+  #set cf $gaSet([set b]SyncECF) 
+  set cf "C:/AT-ETX-2-100G-4Q/ConfFiles/SyncE.txt"
+  set cfTxt "$b"
+      
+  set ret [DownloadConfFile $cf $cfTxt 1 $com]
+  if {$ret!=0} {return $ret}
+  
+  MuxMngIO ioToCnt ioToCnt
+    
+  return $ret
+} 
+
+# ***************************************************************************
+# SyncE_run
+# ***************************************************************************
+proc SyncE_run {run} {
+  global gaSet
+  if {$gaSet(pair)!="SE"} {
+    set gaSet(fail) "It is no possible to perform SyncE test on this Tester"
+    return -2
+  }
+  Power all on  
+  after 2000
+  MuxMngIO ioToCnt ioToCnt
+  
+  set ret [SyncELockClkTest] 
+  if {$ret!=0} {
+    Power all off
+    after 3000
+    Power all on  
+    Wait "Wait for UP" 40
+    set ret [SyncELockClkTest]
+    if {$ret!=0} {
+      return $ret
+    }
+  }
+  
+  set ret [GpibOpen]
+  if {$ret!=0} {
+    set gaSet(fail) "No communication with Scope"
+    return $ret
+  }
+  
+  set ret [ExistTds520B]
+  if {$ret!=0} {return $ret}
+  
+  for {set tr 1} {$tr <= 3} {incr tr} {
+    puts "\n[MyTime] Try $tr of ChkLockClkTds"
+    MuxMngIO ioToCnt ioToCnt
+    DefaultTds520b    
+    ##ClearTds520b
+    after 2000
+    SetLockClkTds   
+    after 3000
+    set ret [ChkLockClkTds]
+    puts "Result of Try $tr of ChkLockClkTds: <$ret>"
+    if {$ret!=0} {
+      after 1000
+    } else {
+      break
+    }
+  }    
+  if {$ret!=0} {
+    GpibClose
+    return $ret
+  }
+   
+  set ret [SyncELockClkTest]
+  if {$ret!=0} {
+    Power all off
+    after 3000
+    Power all on  
+    Wait "Wait for UP" 40
+    set ret [SyncELockClkTest]
+  }
+  if {$ret!=0} {
+    GpibClose
+    return $ret
+  }
+   
+  set ret [CheckJitter 100]
+  GpibClose
+  if {$ret=="-1" || $ret=="-2"} {return $ret}
+  if {$ret>30} {
+    set gaSet(fail) "Jitter: $ret nSec, should not exceed 30 nSec"
+    set ret -1
+  } else {
+    set ret 0
+  }
+  
+  if {$ret==0} {
+    set txt "On UUT connect 3 loops between ports\n\n1/1 - 1/2, 1/3 - 1/4, 1/5 - 1/6"
+    set res [DialogBoxRamzor -type "Ok Stop" -icon /images/info -title "Sync_E" -message $txt]
+    if {$res=="Stop"} {
+      return -2
+    }    
+  } 
+     
+  return $ret
+} 
+
