@@ -2593,14 +2593,19 @@ proc PowerSupplyTestPerf {} {
       return -1
     }
     if {$psType eq "AC"} {
-      #set models {FSF008-GS0G DPS-550AB-53 G1342-0550WRB G1342-0550WRC} 
-      set models $::models_AC
+      if {[string match *FTR.H.* $gaSet(DutInitName)]} {
+        set models G1342-0550WRC
+      } else {
+        set models $::models_AC
+      }
     } elseif {$psType eq "DC"} {
-      #set models {R1CD2551B-GS DPS-650AB-43 G1232-0550WRB G1232-0550WRC}
-      set models $::models_DC
+      if {[string match *FTR.H.* $gaSet(DutInitName)]} {
+        set models G1232-0550WRC
+      } else {
+        set models $::models_DC
+      }
     }  
-    
-    
+        
     puts "MFR_MODEL:<$val> models:<$models>"
     #if {$model ne $val} {}
     if {[lsearch $models $val]=="-1"} {
