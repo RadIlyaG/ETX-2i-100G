@@ -297,6 +297,8 @@ proc GUI {} {
 
   .menubar.tterminal entryconfigure 0 -label "UUT: COM $gaSet(comDut)"
   .menubar.tterminal entryconfigure 1 -label "AUX: COM $gaSet(comAux)"
+  .menubar.tterminal entryconfigure 2 -label "ETX-205 AUX1: COM $gaSet(comAux1)"
+  .menubar.tterminal entryconfigure 3 -label "ETX-205 AUX2: COM $gaSet(comAux2)"
   
   
   set ::AtpExist 1
