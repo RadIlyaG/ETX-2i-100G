@@ -2646,7 +2646,7 @@ proc VoltageTestPerf {} {
     if {$ret!=0} {return $ret}
   } 
   
-  set ret [Wait "Wait fot SFPs ..." 90] ; # 70
+  set ret [Wait "Wait for SFPs ..." 90] ; # 70
   if {$ret!=0} {return $ret}
   
   foreach {b r p d psType np up} [split $gaSet(dutFam) .] {}
@@ -3375,6 +3375,7 @@ proc PtpClock_run_perf {} {
   global gaSet buffer
   Status "PtpClock_run Test"
   Power all on
+  
   set sec1 [clock seconds]
   set ret [Login]
   if {$ret!=0} {
@@ -3400,14 +3401,16 @@ proc PtpClock_run_perf {} {
   set ret [ReadPtpStats master]
   if {$ret!=0} {return $ret}
   
-  for {set i 1} {$i<=25} {incr i} {
+  for {set i 1} {$i<=30} {incr i} {
     Status "Read recovered g.8275-1 status ($i)"
     set ret [Send $com "show con sys clock recovered 0/1 ptp g.8275-1 status\r" $gaSet(prmpt)]
     if {$ret!=0} {
       set gaSet(fail) "Read recovered g.8275-1 status fail"
       return $ret
     }
-    set res [regexp {Clock State Time : (\w+) Clock} $buffer ma val]
+    set ma "-"
+    set val "-"
+    set res [regexp {Clock State Time : ([\w\s]+) Clock} $buffer ma val]
     puts "i:<$i> res:<$res> ma:<$ma> val:<$val>"
     if {$res==0} {
       set gaSet(fail) "Read Clock State Time fail"
@@ -3417,12 +3420,15 @@ proc PtpClock_run_perf {} {
       set ret 0
       break
     }
-    after 4000
+    after 5000
   }
+  
   set sec2 [clock seconds]
-  AddToPairLog $gaSet(pair) "After [expr {$sec2 - $sec1}] seconds Clock State Time : $val. "
+  set chk_prd [expr {$sec2 - $sec1}]
+  set txt "Clock State Time is $val after $chk_prd sec"
+  AddToPairLog $gaSet(pair) $txt
   if {$val!="Locked"} {
-    set gaSet(fail) "Clock State Time : $val"
+    set gaSet(fail) $txt
     return -1
   }
   

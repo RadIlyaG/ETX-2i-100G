@@ -503,7 +503,7 @@ proc ID {run} {
   global gaSet
   Power all on
   if {[string match "*[lindex [info level 0] 0]*" $gaSet(startFrom)]} {
-    set ret [Wait "Wait fot SFPs ..." 90]
+    set ret [Wait "Wait for SFPs ..." 90]
     if {$ret!=0} {return $ret}
   }
   # if {[string match *100G_DT.* $gaSet(DutInitName)]} {
@@ -571,11 +571,11 @@ proc SFP_Id {run} {
   }
   
   if {[string match "*[lindex [info level 0] 0]*" $gaSet(startFrom)]} {
-    set ret [Wait "Wait fot SFPs ..." 90]
+    set ret [Wait "Wait for SFPs ..." 90]
     if {$ret!=0} {return $ret}
   }
   if {$run=="on_off"} {
-    set ret [Wait "Wait fot SFPs ..." 90]
+    set ret [Wait "Wait for SFPs ..." 90]
     if {$ret!=0} {return $ret}
   }  
       
@@ -826,7 +826,7 @@ proc DyingGaspTest {run} {
 proc PowerSupplyTest {run} {
   global gaSet
   if {[string match "*[lindex [info level 0] 0]*" $gaSet(startFrom)]} {
-    set ret [Wait "Wait fot SFPs ..." 90]
+    set ret [Wait "Wait for SFPs ..." 90]
     if {$ret!=0} {return $ret}
   }
   set ret [PowerSupplyTestPerf]
@@ -968,7 +968,7 @@ proc CheckUserDefaultFile {run} {
 # VendorSerial_ID
 # ***************************************************************************
 proc VendorSerial_ID {run} {
-global gaSet 
+  global gaSet 
   Power all on
   set ret [VendorSerialIDPerf]
   return $ret 
@@ -978,9 +978,10 @@ global gaSet
 # PtpClock_conf
 # ***************************************************************************
 proc PtpClock_conf {run} {
-  set ret 0
+  Power all on
+  #set ret 0
   #set ret [FactDefault std noWD]
-  if {$ret!=0} {return $ret}
+  
   set ret [PtpClock_conf_perf]
   return $ret
 }
@@ -989,12 +990,19 @@ proc PtpClock_conf {run} {
 # PtpClock_run
 # ***************************************************************************
 proc PtpClock_run {run} {
-  set ret [Wait "PTP Clock Recovering" 10 white]
-  set ret [PtpClock_run_perf]
-  if {$ret!=0} {
+  Power all on
+  set ret [Wait "Wait for UUT up ..." 90] ; # 70
+  if {$ret!=0} {return $ret}
+  
+  
+  for {set ptpClkRun 1} {$ptpClkRun<=15} {incr ptpClkRun} {
+    puts "\nPtpClock_run ptpClkRun:$ptpClkRun"
     set ret [Wait "PTP Clock Recovering" 10 white]
+    if {$ret!=0} {break}
     set ret [PtpClock_run_perf]
-    if {$ret!=0} {return $ret}
+    if {$ret==0 || $ret=="-2"} {
+      break
+    }
   }
   ## the FactDefault done in ExtClk
   ## set ret [FactDefault std noWD]
