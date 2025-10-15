@@ -17,7 +17,7 @@ proc OpenRL {} {
   puts "Open PIO [MyTime]"
   set ret [OpenPio]
   set ret1 [OpenComUut]
-  #set ret3 [OpenComAux]
+  set ret3 0 ; #[OpenComAux]
   if {[string match {*Mac_BarCode*} $gaSet(startFrom)] || [string match {*Leds*} $gaSet(startFrom)] ||\
       [string match {*Memory*} $gaSet(startFrom)]      || [string match {*License*} $gaSet(startFrom)] ||\
       [string match {*FactorySet*} $gaSet(startFrom)]  || [string match {*SaveUserFile*} $gaSet(startFrom)] ||\
@@ -40,8 +40,8 @@ proc OpenRL {} {
    
   
   set gaSet(curTest) $curTest
-  puts "[MyTime] ret:$ret ret1:$ret1 ret2:$ret2 " ; update
-  if {$ret1!=0 || $ret2!=0} {
+  puts "[MyTime] ret:$ret ret1:$ret1 ret2:$ret2  ret3:$ret3 " ; update
+  if {$ret1!=0 || $ret2!=0 || $ret3!=0} {
     return -3
   }
   return 0
@@ -131,6 +131,8 @@ proc CloseRL {} {
 #   catch {RLEtxGen::CloseAll}
   catch {RL10GbGen::Close $gaSet(id220)}
   #catch {RLScotty::SnmpCloseAllTrap}
+  # puts "CloseRL CloseComAux" ; update 
+  # catch {CloseComAux}
   catch {RLEH::Close}
 }
 
