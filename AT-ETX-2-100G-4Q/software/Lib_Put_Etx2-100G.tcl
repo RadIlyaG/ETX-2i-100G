@@ -253,17 +253,18 @@ proc PS_IDTest {mode} {
   }
   
   if $gaSet(chk_digSerNum) {
+    set gaSet(pageSN) "NA"
     set gaSet(fail) "show device-information fail"
-    set ret [Send $com "exit all\r" $gaSet(prompt)]
+    set ret [Send $com "exit all\r" $gaSet(prmpt)]
     if {$ret!=0} {return $ret}
-    set ret [Send $com "config system\r" $gaSet(prompt)]
+    set ret [Send $com "config system\r" $gaSet(prmpt)]
     if {$ret!=0} {return $ret}
     Send $com "show device-information\r\r" system
     puts "buffer:<$buffer>"; update
     set applSerNum ""
     set res [regexp {Manufacturer Serial Number[\s\:]+([\w\s]+)\sConnectors} $buffer ma val]
     puts "Manufacturer Serial Number res:$res ma:$ma val:$val"
-    set applSerNum $val
+    set applSerNum [string trim $val]
     
     if {$res==0} {
       set gaSet(fail) "No \'Manufacturer Serial Number\' field"  
@@ -275,6 +276,7 @@ proc PS_IDTest {mode} {
     }
     
     set max_sn_len 10
+    set man_sn_len [string length $applSerNum]
     if {$man_sn_len!=$max_sn_len} {
       set gaSet(fail) "The length of the \'Serial Number\' is $man_sn_len. Should be $max_sn_len"  
       return -1
@@ -286,8 +288,13 @@ proc PS_IDTest {mode} {
     AddToPairLog $gaSet(pair) "Manufacturer Serial Number: $val"
   }
   
-  if {$mode=="normal"} {
-    if {![info exists gaSet(uutBootVers)] || $gaSet(uutBootVers)==""} {
+  if {$gaSet(chk_digSerNum)==1 && (![info exists gaSet(pageSN)] || $gaSet(pageSN)=="NA")} {
+    set readPadgSN 1
+  } else {
+    set readPadgSN 0
+  }
+  if {$mode=="normal" || $readPadgSN } {
+    if {![info exists gaSet(uutBootVers)] || $gaSet(uutBootVers)=="" || $readPadgSN } {
       set ret [Send $com "exit all\r" "-2"]
       if {$ret!=0} {return $ret}
       set ret [Send $com "admin reboot\r" "yes/no"]
@@ -297,30 +304,34 @@ proc PS_IDTest {mode} {
       set ret [ReadBootVersion 1]
       if {$ret!=0} {return $ret}
     }
-    
-    puts "gaSet(uutBootVers):<$gaSet(uutBootVers)>"
-    puts "gaSet(dbrBVer):<$gaSet(dbrBVer)>"
-    if {[string index $gaSet(dbrBVer) 0]=="B"} {
-      set dbrBVer [string range $gaSet(dbrBVer) 1 end]
-    } else {
-      set dbrBVer $gaSet(dbrBVer)
-    }
-    puts "dbrBVer:<$dbrBVer>"
-    update
-    set ret 0
-    if {$gaSet(uutBootVers)!=$dbrBVer} {
-      set gaSet(fail) "Boot Version is \"$gaSet(uutBootVers)\". Should be \"$dbrBVer\""
-      return -1
-    }
-    
-    if {$msval1==512 && $gaSet(uutBootVers)!="1.20"} {
-      set gaSet(fail) "Boot Version is \"$gaSet(uutBootVers)\".  For memSize=512 it should be 1.20"
-      return -1
-    }
-    if {$msval1==2048 && $gaSet(uutBootVers)<"1.21"} {
-      set gaSet(fail) "Boot Version is \"$gaSet(uutBootVers)\".  For memSize=2048 it should be 1.21 or higher"
-      return -1
-    }
+	if $readPadgSN {
+	  ## if just read PageSN -> don't continue to check BootSW and HW
+	} else {
+      ## otherwise - check it
+		puts "gaSet(uutBootVers):<$gaSet(uutBootVers)>"
+		puts "gaSet(dbrBVer):<$gaSet(dbrBVer)>"
+		if {[string index $gaSet(dbrBVer) 0]=="B"} {
+		  set dbrBVer [string range $gaSet(dbrBVer) 1 end]
+		} else {
+		  set dbrBVer $gaSet(dbrBVer)
+		}
+		puts "dbrBVer:<$dbrBVer>"
+		update
+		set ret 0
+		if {$gaSet(uutBootVers)!=$dbrBVer} {
+		  set gaSet(fail) "Boot Version is \"$gaSet(uutBootVers)\". Should be \"$dbrBVer\""
+		  return -1
+		}
+		
+		if {$msval1==512 && $gaSet(uutBootVers)!="1.20"} {
+		  set gaSet(fail) "Boot Version is \"$gaSet(uutBootVers)\".  For memSize=512 it should be 1.20"
+		  return -1
+		}
+		if {$msval1==2048 && $gaSet(uutBootVers)<"1.21"} {
+		  set gaSet(fail) "Boot Version is \"$gaSet(uutBootVers)\".  For memSize=2048 it should be 1.21 or higher"
+		  return -1
+		}
+	}
   }   
   
   if $gaSet(chk_digSerNum) {
@@ -1017,8 +1028,8 @@ proc ReadBootVersion {readPage3} {
     set gaSet(pageSN) "NA"
     regexp {Page 0:\s+([0-9\.A-Z]+)\s} $buffer ma val
     set pageSN ""
-    foreach he [lrange [split $val .] 6 15] {
-      append pageSN [format %c [scan $he %x]]
+    foreach he [lrange [split $val .] 3 7] {
+      append pageSN $he
     }
     set gaSet(pageSN) $pageSN
     AddToPairLog $gaSet(pair) "Page0 Serial Number: $pageSN"
