@@ -6,14 +6,17 @@ switch -exact -- $gaSet(pair) {
       console eval {wm geometry . +150+1}
       console eval {wm title . "Con 1"} 
       set gaSet(pioBoxSerNum) FT314L1Z  
+      set gaSet(comAux1)    NA
+      set gaSet(comAux2)    NA
   }
   2 {
       set gaSet(comDut)    4
       set gaSet(comAux)  6
       console eval {wm geometry . +150+200}
       console eval {wm title . "Con 2"} 
-      set gaSet(pioBoxSerNum) FT311L5L         
-  }
-  
+      set gaSet(pioBoxSerNum) FT311L5L  
+      set gaSet(comAux1)    NA
+      set gaSet(comAux2)    NA      
+  }  
 }  
 source lib_PackSour.tcl

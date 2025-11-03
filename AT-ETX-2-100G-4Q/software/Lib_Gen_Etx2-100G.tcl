@@ -236,6 +236,8 @@ proc SaveUutInit {fil} {
     }
     puts $id "set gaSet($indx) \"$gaSet($indx)\""
   }
+  if ![info exists gaSet(chk_digSerNum)] {set gaSet(chk_digSerNum) 0}
+  puts $id "set gaSet(chk_digSerNum) \"$gaSet(chk_digSerNum)\""
   
   #puts $id "set gaSet(macIC)      \"$gaSet(macIC)\""
   close $id
@@ -701,6 +703,11 @@ proc GetDbrName {} {
   }
   puts "GetDbrName ::uutIsPs:<$::uutIsPs>"
   
+  set parL [list chk_digSerNum]
+  foreach par $parL {
+    set gaSet($par) ??
+  }  
+  
   if {[file exists uutInits/$gaSet(DutInitName)]} {
     source uutInits/$gaSet(DutInitName)
     if {$gaSet(DefaultCF)=="" || $gaSet(DefaultCF)=="c:/aa"} {  
@@ -776,6 +783,26 @@ proc GetDbrName {} {
     set ret 0
   }
   puts ""
+  
+  set parL [list chk_digSerNum]
+  set emptyParams "" ; #[list]
+  foreach par $parL {
+    if {$gaSet($par)=="??"} {
+      append emptyParams "$par \n"
+    }
+  }
+  if {[llength $emptyParams]>0} {
+    set gaSet(fail) "Define in INIT:\n\n$emptyParams"
+    RLSound::Play fail
+    Status "Test FAIL"  red
+    DialogBoxRamzor -aspect 2000 -type Ok -message $gaSet(fail) -icon images/error -title "INIT Problem"
+    pack $gaGui(frFailStatus)  -anchor w
+    $gaSet(runTime) configure -text ""
+    $gaGui(startFrom) configure -text "" -values [list]
+    set glTests [list]
+    set gaSet(curTest) ""
+    set ret -3
+  }  
   
   focus -force $gaGui(tbrun)
   if {$ret==0} {

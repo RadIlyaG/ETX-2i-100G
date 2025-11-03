@@ -252,6 +252,40 @@ proc PS_IDTest {mode} {
     }
   }
   
+  if $gaSet(chk_digSerNum) {
+    set gaSet(fail) "show device-information fail"
+    set ret [Send $com "exit all\r" $gaSet(prompt)]
+    if {$ret!=0} {return $ret}
+    set ret [Send $com "config system\r" $gaSet(prompt)]
+    if {$ret!=0} {return $ret}
+    Send $com "show device-information\r\r" system
+    puts "buffer:<$buffer>"; update
+    set applSerNum ""
+    set res [regexp {Manufacturer Serial Number[\s\:]+([\w\s]+)\sConnectors} $buffer ma val]
+    puts "Manufacturer Serial Number res:$res ma:$ma val:$val"
+    set applSerNum $val
+    
+    if {$res==0} {
+      set gaSet(fail) "No \'Manufacturer Serial Number\' field"  
+      return -1
+    }
+    if {$val=="Unavailable" || $val=="Error" || $val=="Not Available"} {
+      set gaSet(fail) "The \'Manufacturer Serial Number\' is \'$val\'"  
+      return -1
+    }
+    
+    set max_sn_len 10
+    if {$man_sn_len!=$max_sn_len} {
+      set gaSet(fail) "The length of the \'Serial Number\' is $man_sn_len. Should be $max_sn_len"  
+      return -1
+    }
+    if {[string is digit $val]==0} {
+      set gaSet(fail) "The \'Serial Number\' ($val) is wrong. Should be only digits"  
+      return -1
+    }
+    AddToPairLog $gaSet(pair) "Manufacturer Serial Number: $val"
+  }
+  
   if {$mode=="normal"} {
     if {![info exists gaSet(uutBootVers)] || $gaSet(uutBootVers)==""} {
       set ret [Send $com "exit all\r" "-2"]
@@ -286,6 +320,15 @@ proc PS_IDTest {mode} {
     if {$msval1==2048 && $gaSet(uutBootVers)<"1.21"} {
       set gaSet(fail) "Boot Version is \"$gaSet(uutBootVers)\".  For memSize=2048 it should be 1.21 or higher"
       return -1
+    }
+  }   
+  
+  if $gaSet(chk_digSerNum) {
+    puts ""
+    puts "applSerNum:$applSerNum pageSN:$gaSet(pageSN)"
+    if {$applSerNum!=$gaSet(pageSN)} {
+      set gaSet(fail) "Page's SN:$gaSet(pageSN), Appl's SN:$applSerNum"
+      return -1  
     }
   }
 
@@ -970,6 +1013,15 @@ proc ReadBootVersion {readPage3} {
       AddToPairLog $gaSet(pair) "Mismatch between Page3 (pageBarcode) and scanned (guiBarcode) Barcodes"
       return -1
     }
+    
+    set gaSet(pageSN) "NA"
+    regexp {Page 0:\s+([0-9\.A-Z]+)\s} $buffer ma val
+    set pageSN ""
+    foreach he [lrange [split $val .] 6 15] {
+      append pageSN [format %c [scan $he %x]]
+    }
+    set gaSet(pageSN) $pageSN
+    AddToPairLog $gaSet(pair) "Page0 Serial Number: $pageSN"
   }
   return $ret
 }

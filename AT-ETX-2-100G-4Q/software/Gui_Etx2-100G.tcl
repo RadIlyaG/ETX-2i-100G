@@ -771,7 +771,7 @@ proc GuiInventory {} {
   array unset gaTmpSet
   
   if {![file exists uutInits/$gaSet(DutInitName)]} {
-    set parL [list sw licDir dbrSW swPack dbrBVerSw dbrBVer cpld sw_forBist]
+    set parL [list sw licDir dbrSW swPack dbrBVerSw dbrBVer cpld sw_forBist chk_digSerNum]
     foreach par $parL {
       set gaSet($par) ??
       set gaTmpSet($par) ??
@@ -858,6 +858,8 @@ proc GuiInventory {} {
     set fr  [frame $base.frUcf -bd 2 -relief groove]
       set gaGui(chbUcf) [ttk::checkbutton $fr.chbUcf -text "User Default Configuration File" -variable ::chbUcf -command {ToggleUCF}]
       pack $gaGui(chbUcf)  -pady 1 -padx 3 -anchor w 
+      set gaGui(chk_digSerNum) [ttk::checkbutton $fr.chk_digSerNum -text "Check Digital Serial Number" -variable gaTmpSet(chk_digSerNum) -command {ToggleUCF}]
+      pack $gaGui(chk_digSerNum)  -pady 1 -padx 3 -anchor w 
     pack $fr -fill x -pady 3
   }
   #pack [Separator $base.sep3 -orient horizontal] -fill x -padx 2 -pady 3
