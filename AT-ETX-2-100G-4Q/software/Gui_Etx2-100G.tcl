@@ -649,6 +649,14 @@ proc ButRun {} {
     update
   }
   
+  if {[string match {*Page's SN:*} $gaSet(fail)]} {
+    RLSound::Play information
+    set txt "Serial Number problem\n\nDon't continue! Call to Ronen"
+    set res [DialogBox -type "OK" -icon /images/error -title "Serial Number problem" \
+          -message $txt -bg yellow -fg red -font {TkDefaultFont 11 bold}]
+    update
+  }
+  
   set res [DialogBox -type "OK" -icon /images/info -title "Finish" -message "The test is done" ]
   update
   Ramzor all off
