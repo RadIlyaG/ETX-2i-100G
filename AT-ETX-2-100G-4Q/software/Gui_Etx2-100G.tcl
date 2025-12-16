@@ -640,20 +640,20 @@ proc ButRun {} {
   $gaGui(tbrun) configure -relief raised -state normal
   $gaGui(tbstop) configure -relief sunken -state disabled
   $gaGui(tbpaus) configure -relief sunken -state disabled
+    
+  if {[string match {*Page's SN:*} $gaSet(fail)]} {
+    RLSound::Play information
+    set txt "Serial Number problem\n\nDon't continue!\nCALL TO FINAL TEST MANAGER"
+    set res [DialogBox -type "OK" -icon /images/error -title "Serial Number problem" \
+          -message $txt -bg yellow -fg red -font {TkDefaultFont 11 bold}]
+    update
+  }
   
   if {$gaSet(msval1)!="" && $gaSet(msval1)=="2048"} {
     RLSound::Play information
     set txt "Put sticker \'Extended Memory\'"
     set res [DialogBox -type "OK" -icon /images/info -title "Extended Memory" \
           -message $txt -bg yellow -font {TkDefaultFont 11}]
-    update
-  }
-  
-  if {[string match {*Page's SN:*} $gaSet(fail)]} {
-    RLSound::Play information
-    set txt "Serial Number problem\n\nDon't continue! Call to Ronen"
-    set res [DialogBox -type "OK" -icon /images/error -title "Serial Number problem" \
-          -message $txt -bg yellow -fg red -font {TkDefaultFont 11 bold}]
     update
   }
   

@@ -1511,6 +1511,7 @@ proc InformAboutNewFiles {} {
   if {$gaSet(radNet)==0} {return {} }
   set path [file dirname [pwd]]
   set pathTail [file tail $path]
+  set r_temp //prod-svm1/temp/IlyaG/$pathTail
   set secNow [clock seconds]
   set ::newFilesL [list]
   puts "\n[MyTime] InformAboutNewFiles"
@@ -1537,14 +1538,16 @@ proc InformAboutNewFiles {} {
       foreach {s} $::newFilesL {
         append mess "\r$s\n"
       }
-      append mess "\rfile://R:\\IlyaG\\$pathTail\r"
+      # 10:39 16/12/2025 append mess "\rfile://R:\\IlyaG\\$pathTail\r"
+      # R:/IlyaG/$pathTail
+      append mess "\rfile://$r_temp\r"
       SendMail $mlist $mess
-      if ![file exists R:/IlyaG/$pathTail] {
-        file mkdir R:/IlyaG/$pathTail
+      if ![file exists $r_temp] {
+        file mkdir $r_temp
       }
       #set msg "A message regarding\n\n"
       foreach fi $::newFilesL {
-        catch {file copy -force $fi R:/IlyaG/$pathTail } res
+        catch {file copy -force $fi $r_temp } res
         puts "file:<$fi>, res of copy:<$res>"
       }
       update

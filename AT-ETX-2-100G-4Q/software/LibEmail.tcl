@@ -171,17 +171,133 @@ proc TestEmail {} {
   return Ok
 }
 
+
 # ***************************************************************************
 # SendMail
 # ***************************************************************************
-proc SendMail {emailL mess} {
+proc SendMail {emailL mess {sbj_txt "init/s changed"}} {
   
   if {[llength $emailL]>0} {
     ezsmtp::config -mailhost radmail.rad.co.il -from "[string toupper [info host] ]"
-    catch {ezsmtp::send -to "[lindex $emailL 0]" -cclist [lrange $emailL 1 end] -subject "[string toupper [info host] ] : init/s changed" \
+    catch {ezsmtp::send -to "[lindex $emailL 0]" -cclist [lrange $emailL 1 end] -subject "[string toupper [info host] ] : $sbj_txt" \
       -body "\n[string toupper [info host] ] : Message from Tester\n\
        \n$mess " \
       -from "$::env(USERNAME)@rad.com"} res
     puts "res:<$res>"  
   }    
 }
+
+package require smtp
+# ***************************************************************************
+# send_smtp_mail
+# ***************************************************************************
+proc send_smtp_mail {to args} {
+  puts "args:<$args>"
+ set procName [lindex [info level 0] 0]
+  set mailhost radmail.rad.co.il
+  set mailport 25
+  set time_date [clock format [clock seconds] -format %T_%D]
+  
+  set from  [string toupper [info host]]
+  set from_index [lsearch $args "-from"]
+  if {$from_index>"-1"} {
+    set from [lindex $args [expr {1 + $from_index}]]
+  }
+  
+  set subject "ATE_reports_$time_date"
+  set subj_index [lsearch $args "-subject"]
+  if {$subj_index>"-1"} {
+    set subject [lindex $args [expr {1 + $subj_index}]]
+  }
+  
+  set body "Hello world!\n$time_date"
+  set body_index [lsearch $args "-body"]
+  if {$body_index>"-1"} {
+    set body [lindex $args [expr {1 + $body_index}]]
+  }
+  
+  set headers ""
+  set headers_index [lsearch $args "-headers"]
+  if {$headers_index>"-1"} {
+    set headers [lindex $args [expr {1 + $headers_index}]]
+  }
+  
+  set bcc ""
+  set bcc_index [lsearch $args "-bcc"]
+  if {$bcc_index>"-1"} {
+    set bcc [lindex $args [expr {1 + $bcc_index}]]
+  }
+  
+  set cc ""
+  set cc_index [lsearch $args "-cc"]
+  if {$cc_index>"-1"} {
+    set cc [lindex $args [expr {1 + $cc_index}]]
+  }
+  
+  set att ""
+  set att_index [lsearch $args "-att"]
+  if {$att_index>"-1"} {
+    set att [lindex $args [expr {1 + $att_index}]]
+    set opt_attcs_type -file
+  }
+  
+  if [string length $att] {
+    
+      
+    set parts  [mime::initialize -canonical text/plain -string $body]
+    foreach att_obj $att {
+      puts "$procName Processing: $att_obj File_exists: [file exists $att_obj]"
+      update
+      if {[file extension $att_obj]==".db"} {
+        set imageT [mime::initialize -canonical "application/db; name=\"[file tail $att_obj]\"" -file $att_obj]
+      } else {
+        set imageT [mime::initialize -canonical "image/tif; name=\"[file tail $att_obj]\"" -file $att_obj]
+      }
+      lappend parts $imageT
+    }
+             
+    
+                        
+    set messageT [::mime::initialize -canonical multipart/mixed -parts $parts]
+  } else {
+    set messageT [::mime::initialize -canonical text/plain -string $body]
+  }
+
+  set command [list ::smtp::sendmessage $messageT -servers $mailhost -ports  $mailport]
+
+  lappend command -header [list From $from]
+  foreach to_obj $to {
+    lappend command -header [list To $to_obj]
+  }
+  lappend command -header [list Subject $subject]
+
+  if {[string length $cc]} {
+    foreach cc_obj $cc {
+      lappend command -header [list Cc $cc_obj]
+    }  
+  }
+  
+  if {[string length $bcc]} {
+    foreach bcc_obj $bcc {
+      lappend command -header [list Bcc $bcc_obj]
+    }  
+  }
+
+  if {[string length $headers]} {
+      foreach {key value} $headers {
+          lappend command -header [list $key $value]
+      }
+  }
+
+  puts "$procName cmd:<$command>"
+  set err [catch { eval $command } result]
+  #set err [catch  $command result]
+  ::mime::finalize $messageT -subordinates all
+  
+  if {$err} {
+    return [list -1 $result]
+  } else {
+    return [list 0 ""]
+  }
+}
+
