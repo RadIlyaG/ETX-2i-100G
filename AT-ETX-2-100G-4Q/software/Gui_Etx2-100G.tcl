@@ -643,7 +643,7 @@ proc ButRun {} {
     
   if {[string match {*Page's SN:*} $gaSet(fail)]} {
     RLSound::Play information
-    set txt "Serial Number problem\n\nDon't continue!\nCALL TO FINAL TEST MANAGER"
+    set txt "Serial Number problem\n\nDon't continue!\nCALL FINAL TEST MANAGER"
     set res [DialogBox -type "OK" -icon /images/error -title "Serial Number problem" \
           -message $txt -bg yellow -fg red -font {TkDefaultFont 11 bold}]
     update
