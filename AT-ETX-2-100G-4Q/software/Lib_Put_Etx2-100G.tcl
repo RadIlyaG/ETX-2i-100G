@@ -2667,9 +2667,19 @@ proc PowerSupplyTestPerf {} {
       } else {
         set models $::models_DC
       }
-    }  
+    } elseif {$psType eq "ACDC"} {
+      if {[string match *FTR.H.* $gaSet(DutInitName)]} {
+        set models G1232-0550WRC
+      } else {
+	    if {$ps==1} {
+		  set models $::models_AC
+		} else {
+          set models $::models_DC
+		}
+      }
+    } 
         
-    puts "MFR_MODEL:<$val> models:<$models>"
+    puts "PS-$ps psType:$psType MFR_MODEL:<$val> models:<$models>"
     #if {$model ne $val} {}
     if {[lsearch $models $val]=="-1"} {
       set gaSet(fail) "The MFR_MODEL is \'$val\'. Should be one of the \'$models\'"  
