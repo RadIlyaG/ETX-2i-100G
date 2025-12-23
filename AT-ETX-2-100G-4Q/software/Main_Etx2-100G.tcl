@@ -82,6 +82,8 @@ proc BuildTests {} {
           lappend lTestNames LoadDefaultConfiguration CheckUserDefaultFile
         }
         
+        lappend lTestNames Verify_DigitalSerialNumber 
+        
         if $::repairMode {
           ##  don't do it at David's
         } else {
@@ -1225,3 +1227,52 @@ proc SyncE_run {run} {
   return $ret
 } 
 
+
+# ***************************************************************************
+# Verify_DigitalSerialNumber
+# ***************************************************************************
+proc Verify_DigitalSerialNumber {run} {
+  global gaSet
+  
+  set gaSet(fail) ""
+  foreach {ret resTxt} [::RLWS::Verify_DigitalSerialNumber $gaSet(1.barcode1)] {}
+  if {$ret=="-1"} {
+    set gaSet(fail) $resTxt
+    return -1
+  } elseif {$ret=="0"} {
+    AddToPairLog $gaSet(pair) $resTxt
+    return 0
+  } elseif {$ret=="1"} {
+    set dbr_dsn $resTxt
+    AddToPairLog $gaSet(pair) "DB Digital Serial Number: $dbr_dsn"
+    
+    foreach {ret resTxt} [Read_CLI_serialNumber] {}
+	puts "\nVerify_DigitalSerialNumber after Read_CLI_serialNumber $ret $resTxt"
+    if {$ret<0} {	  
+      set gaSet(fail) $resTxt
+      return $ret
+    } 
+	
+    set cli_dsn $resTxt
+    AddToPairLog $gaSet(pair) "CLI Digital Serial Number: $cli_dsn"
+    
+    foreach {ret resTxt} [Read_Page_serialNumber] {}
+	puts "\nVerify_DigitalSerialNumber after Read_Page_serialNumber $ret $resTxt"
+    if {$ret<0} {
+      set gaSet(fail) $resTxt
+      return $ret
+    } 
+    set page0_dsn $resTxt
+    AddToPairLog $gaSet(pair) "Page0 Digital Serial Number: $page0_dsn"
+    
+    puts "\ndbr_dsn:<$dbr_dsn> cli_dsn:<$cli_dsn> page0_dsn:<$page0_dsn>"
+    if {($dbr_dsn == $cli_dsn) && ($dbr_dsn == $page0_dsn)} {
+      return 0
+    }
+        
+    set gaSet(fail) "DBR:$dbr_dsn, CLI:$cli_dsn, Page0:$page0_dsn"
+    return -1
+  }
+  set gaSet(fail) "Verify_DigitalSerialNumber return"
+  return  -1
+}
