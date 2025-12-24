@@ -229,15 +229,15 @@ proc SaveUutInit {fil} {
     }
     puts $id "set gaSet([set indx]CF) \"$gaSet([set indx]CF)\""
   }
-  foreach indx {licDir} {
-    if ![info exists gaSet($indx)] {
-      puts "SaveUutInit fil:$SaveUutInit gaSet($indx) doesn't exist!"
-      set gaSet($indx) ???
-    }
-    puts $id "set gaSet($indx) \"$gaSet($indx)\""
-  }
-  if ![info exists gaSet(chk_digSerNum)] {set gaSet(chk_digSerNum) 0}
-  puts $id "set gaSet(chk_digSerNum) \"$gaSet(chk_digSerNum)\""
+  # foreach indx {licDir} {
+    # if ![info exists gaSet($indx)] {
+      # puts "SaveUutInit fil:$SaveUutInit gaSet($indx) doesn't exist!"
+      # set gaSet($indx) ???
+    # }
+    # puts $id "set gaSet($indx) \"$gaSet($indx)\""
+  # }
+  # if ![info exists gaSet(chk_digSerNum)] {set gaSet(chk_digSerNum) 0}
+  # puts $id "set gaSet(chk_digSerNum) \"$gaSet(chk_digSerNum)\""
   
   #puts $id "set gaSet(macIC)      \"$gaSet(macIC)\""
   close $id
