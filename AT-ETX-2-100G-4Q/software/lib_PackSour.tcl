@@ -20,6 +20,7 @@ if [file exists c:/TEMP_FOLDER] {
 source lib_DeleteOldApp.tcl
 DeleteOldApp
 DeleteOldUserDef
+source lib_Syncthing.tcl
 
 set host_name  [info host]
 if {[string match *ilya_g* $host_name] || [string match *avraham-bi* $host_name] || [string match *david-ya* $host_name] || [string match *ofer-m-* $host_name]} {
@@ -86,6 +87,27 @@ if 1 {
     }
   } else {
     set emailL [list]
+  }
+  
+  if 1 {
+    set r_temp //prod-svm1/temp/IlyaG/[file tail [file dirname [pwd]]]
+    source LibEmail.tcl
+    foreach {ret resTxt} [CheckSyncthingLocalAdditions [list $d1 $d2] $emailL $r_temp] {} 
+    puts "SyTh ret:<$ret>"
+    puts "SyTh resTxt:<$resTxt>"
+    set return_list "ret:<$ret>\nresTxt:<$resTxt>"
+    if {$ret=="-1"} {
+      send_smtp_mail ilya_g@rad.com -subject "Message from Tester [string toupper [info host]]" \
+        -body $return_list
+      if 0 {
+        set res [tk_messageBox -icon error -type yesno -title "AutoSync"\
+        -message "The AutoSync process did not perform successfully.\n\n\
+        Do you want to continue? "]
+        if {$res=="no"} {
+          exit
+        }
+      }
+    }
   }
   
   set ret [RLAutoSync::AutoSync "$s1 $d1 $s2 $d2" -noCheckFiles {init*.tcl skipped.txt *.db} \

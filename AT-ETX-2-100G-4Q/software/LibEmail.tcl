@@ -261,6 +261,7 @@ proc send_smtp_mail {to args} {
     set messageT [::mime::initialize -canonical multipart/mixed -parts $parts]
   } else {
     set messageT [::mime::initialize -canonical text/plain -string $body]
+    #set messageT [::mime::initialize -canonical text/html -string $body]
   }
 
   set command [list ::smtp::sendmessage $messageT -servers $mailhost -ports  $mailport]
