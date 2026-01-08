@@ -645,7 +645,7 @@ proc mparray {a {pattern *}} {
 # GetDbrName
 # ***************************************************************************
 proc GetDbrName {} {
-  global gaSet gaGui
+  global gaSet gaGui glTests
   
   set barcode [set gaSet(entDUT) [string toupper $gaSet(entDUT)]] ; update
   Status "Please wait for retriving DBR's parameters for $barcode"
@@ -768,6 +768,19 @@ proc GetDbrName {} {
   }
   
   BuildTests
+  
+  # 09:47 08/01/2026
+  # Delete tmpLocalUCF if there is not LoadDefaultConfiguration Test
+  set flag_load 0
+  foreach tst $glTests {
+    if [string match *LoadDefaultConfiguration* $tst] {
+      set flag_load 1
+      break
+    }
+  }
+  if !$flag_load {
+    catch {file delete -force $::tmpLocalUCF}
+  }
   
   if !$::uutIsPs {
     set ret [GetDbrSW $barcode]

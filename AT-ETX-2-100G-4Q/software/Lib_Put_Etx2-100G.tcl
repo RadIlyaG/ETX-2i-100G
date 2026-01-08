@@ -420,7 +420,7 @@ proc DyingGaspPerf {psOffOn psOff} {
     #Send $gaSet(comDut) logout\r user
     after 1000
     Status "Wait for Login trap"
-    set resFile c:\\temp\\te_$gaSet(pair)_[clock format [clock seconds] -format  "%Y.%m.%d_%H.%M.%S"].txt
+    set resFile c:\\temp\\teA_$gaSet(pair)_[clock format [clock seconds] -format  "%Y.%m.%d_%H.%M.%S"].txt
     set dur 6
     exec [info nameofexecutable] Lib_tshark.tcl $intf $dur $resFile &
     #catch {exec C:\\Program\ Files\\Wireshark\\tshark.exe -i $intf -O snmp -x -S lIsT -a duration:$dur  -A "c:\\temp\\tmp.cap" > [set resFile] &} rr
@@ -467,6 +467,7 @@ proc DyingGaspPerf {psOffOn psOff} {
     }
     if {$res==1} {
       set ret 0
+      file delete -force $resFile  
       break
     } elseif {$res==0} {
       set ret -1
@@ -488,7 +489,7 @@ proc DyingGaspPerf {psOffOn psOff} {
   
   Status "Wait for Dying Gasp trap"
   set dur 10
-  set resFile c:\\temp\\te_$gaSet(pair)_[clock format [clock seconds] -format  "%Y.%m.%d_%H.%M.%S"].txt
+  set resFile c:\\temp\\teB_$gaSet(pair)_[clock format [clock seconds] -format  "%Y.%m.%d_%H.%M.%S"].txt
   catch {exec C:\\Program\ Files\\Wireshark\\tshark.exe -i $intf -O snmp -x -S lIsT -a duration:$dur  -A "c:\\temp\\tmp.cap" > [set resFile] &} rr
   #exec [info nameofexecutable] Lib_tshark.tcl $intf $dur $resFile &  
      
@@ -1178,6 +1179,11 @@ proc LoadDefConf {} {
   set ret [Send $com "file copy running-config user-default-config\r" "yes/no" ]
   if {$ret!=0} {return $ret}
   set ret [Send $com "y\r" "successfull" 80]
+  
+  # 09:49 08/01/2026
+  # Delete file after use
+  catch {file delete -force $localUCF}
+  catch {file delete -force $::tmpLocalUCF}
   
   return $ret
 }
@@ -2037,7 +2043,7 @@ proc SyncELockClkTest {} {
 proc PingTraps {intf dutIp} {
   global gaSet
   Status "Wait for Ping traps"
-  set resFile c:\\temp\\te_$gaSet(pair)_[clock format [clock seconds] -format  "%Y.%m.%d_%H.%M.%S"].txt
+  set resFile c:\\temp\\teC_$gaSet(pair)_[clock format [clock seconds] -format  "%Y.%m.%d_%H.%M.%S"].txt
   set dur 10
   exec [info nameofexecutable] Lib_tshark.tcl $intf $dur $resFile &
   after 1000
@@ -2054,6 +2060,7 @@ proc PingTraps {intf dutIp} {
   
   set res [regexp -all "Src: $dutIp, Dst: 10.10.10.10" $monData]
   puts "res:$res"
+  file delete -force $resFile  
   if {$res<2} {
     set gaSet(fail) "2 Ping traps did not sent"
     return -1

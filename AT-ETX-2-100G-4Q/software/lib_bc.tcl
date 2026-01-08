@@ -115,12 +115,20 @@ proc RegBC {} {
       set barcode$la $barcode
       #puts "pairIndx:$pairIndx pair:$pair"
       Status "Registration the  MAC."
-      set str "$::RadAppsPath/MACReg_2Mac_2IMEI.exe /$mac / /$barcode /DISABLE /DISABLE /DISABLE /DISABLE /DISABLE /DISABLE /DISABLE /DISABLE"
-      set res$la [string trim [catch {eval exec $str} retVal$la]]
-      #set res$la [string trim [catch {exec c://RADapps/MACReg.exe /$mac /$barcode /DISABLE /DISABLE /DISABLE /DISABLE /DISABLE /DISABLE /DISABLE /DISABLE} retVal$la]]
+      
+      #set str "$::RadAppsPath/MACReg_2Mac_2IMEI.exe /$mac / /$barcode /DISABLE /DISABLE /DISABLE /DISABLE /DISABLE /DISABLE /DISABLE /DISABLE"
+      #set res$la [string trim [catch {eval exec $str} retVal$la]]
+      
+      set str "::RLWS::MacReg $barcode $mac"
+      foreach "res$la retVal$la" [eval $str] {}
       puts "mac:$mac barcode:$barcode res$la:<[set res$la]> retVal$la:<[set retVal$la]>"
       update
       AddToPairLog $gaSet(pair) "MAC:$mac IDbarcode:$barcode"
+      
+      foreach {res resTxt} [RLWS::Get_IdBarcodeData $barcode] {}
+      if {$res==0} {
+        AddToPairLog $gaSet(pair) "Get_IdBarcodeData: $resTxt"
+      }
       #after 1000
       if {[set res$la]!="0"} {
         puts "ret:[set res$la]"
