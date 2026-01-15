@@ -703,7 +703,8 @@ proc GetDbrName {} {
   }
   puts "GetDbrName ::uutIsPs:<$::uutIsPs>"
   
-  set parL [list chk_digSerNum]
+  #09:54 12/01/2026
+  set parL ""; # [list chk_digSerNum]
   foreach par $parL {
     set gaSet($par) ??
   }  
@@ -797,7 +798,8 @@ proc GetDbrName {} {
   }
   puts ""
   
-  set parL [list chk_digSerNum]
+  # 09:55 12/01/2026
+  set parL ""; #[list chk_digSerNum]
   set emptyParams "" ; #[list]
   foreach par $parL {
     if {$gaSet($par)=="??"} {
