@@ -243,6 +243,11 @@ set ::loginLoopsQty 64
 set ::models_AC {FSF008-GS0G  DPS-550AB-53 G1342-0550WRB G1342-0550WRC}
 set ::models_DC {R1CD2551B-GS DPS-650AB-43 G1232-0550WRB G1232-0550WRC} 
 
+DeleteOldTeFiles
+DeleteOldCaptConsFiles
+DeleteTmpTmpFiles
+DeleteOldAgileUserConfFiles
+
 GUI
 #BuildTests
 update

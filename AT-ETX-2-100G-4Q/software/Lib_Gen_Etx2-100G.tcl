@@ -1760,3 +1760,58 @@ proc Power_usb_relay {ps state} {
   return 0
 }
 
+# ***************************************************************************
+# DeleteOldTeFiles
+# ***************************************************************************
+proc DeleteOldTeFiles {} {
+  foreach fi [glob -nocomplain c:/temp/te_*.txt] {
+    file delete -force $fi
+  }
+}
+# ***************************************************************************
+# DeleteOldCaptConsFiles
+# ***************************************************************************
+proc DeleteOldCaptConsFiles {} {
+  set daysAgo [clock add [clock seconds] -4 days]
+  foreach fi [glob -nocomplain c:/temp/ConsoleCapt*.txt] {
+    if {[file mtime $fi]<$daysAgo} {
+      file delete -force $fi
+    }  
+  }
+}
+
+# ***************************************************************************
+# DeleteTmpTmpFiles
+# ***************************************************************************
+proc DeleteTmpTmpFiles {} {
+  puts "\n[MyTime] DeleteTmpTmpFiles"; update
+  set qty 0
+  foreach fi [glob -nocomplain c:/tmpTmp/*.txt] {
+    file delete -force $fi
+    incr qty
+  }
+  puts "[MyTime] $qty files deleted\n"; update
+}
+# ***************************************************************************
+# DeleteOldAgileUserConfFiles
+# ***************************************************************************
+proc DeleteOldAgileUserConfFiles {} {
+  global gaSet
+  puts "\n[MyTime] DeleteOldAgileUserConfFiles"; update
+  set qty 0
+  set daysAgo [clock add [clock seconds] -4 days]
+  foreach fi [glob -nocomplain c:/temp/*.tcl_${gaSet(pair)}.txt] {
+    if {[file mtime $fi]<$daysAgo} {
+      file delete -force $fi
+      incr qty
+    }  
+  }
+  foreach fi [glob -nocomplain c:/temp/20*_${gaSet(pair)}.txt] {
+    if {[file mtime $fi]<$daysAgo} {
+      file delete -force $fi
+      incr qty
+    }  
+  }
+  puts "[MyTime] $qty files deleted\n"; update
+}
+
